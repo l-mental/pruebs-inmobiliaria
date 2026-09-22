@@ -1,0 +1,6 @@
+{
+  "name": "Inmobiliaria Nuevas Raíces",
+  "description": "Sistema integral de gestión inmobiliaria para control de urbanizaciones, terrenos, ventas, pagos, cuotas y clientes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
