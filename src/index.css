@@ -1,36 +1,85 @@
 @import "tailwindcss";
 
-body {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background-color: #f4f6f5;
-  color: #1e293b;
-  margin: 0;
-  padding: 0;
+@layer base {
+  html {
+    font-size: 17.5px;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f4f8f6;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+  }
 }
 
 .font-script {
   font-family: 'Caveat', cursive;
 }
 
-.font-serif-brand {
+.font-display {
   font-family: 'Playfair Display', serif;
 }
 
-/* Custom scrollbar for clean table & panel views */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Custom slow spin animation for the sun on Inicio */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f5f2;
+.animate-spin-slow {
+  animation: spin-slow 24s linear infinite;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
+/* Make text sizes noticeably larger and clearer across the system */
+.text-xs {
+  font-size: 0.85rem !important;
+  line-height: 1.35rem !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+.text-sm {
+  font-size: 0.96rem !important;
+  line-height: 1.45rem !important;
+}
+
+.text-base {
+  font-size: 1.08rem !important;
+  line-height: 1.6rem !important;
+}
+
+.text-lg {
+  font-size: 1.22rem !important;
+  line-height: 1.75rem !important;
+}
+
+/* Print Styles for Bank Payment Plan & Contracts */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-bank-plan,
+  #printable-bank-plan *,
+  #printable-contract,
+  #printable-contract * {
+    visibility: visible;
+  }
+  #printable-bank-plan,
+  #printable-contract {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
 }

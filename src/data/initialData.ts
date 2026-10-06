@@ -31,6 +31,8 @@ export const INITIAL_SALES: Sale[] = [
     image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80',
     totalPaid: 45000,
     pendingBalance: 0,
+    latitude: -17.543740,
+    longitude: -65.986330,
     installments: [
       { id: 'I-1', number: 1, dueDate: '05/05/2025', amount: 45000, status: 'Pagado', paidDate: '05/05/2025', receiptNumber: 'REC-001' }
     ]
@@ -56,6 +58,8 @@ export const INITIAL_SALES: Sale[] = [
     image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=600&q=80',
     totalPaid: 15000,
     pendingBalance: 23000,
+    latitude: -17.404280,
+    longitude: -66.041530,
     installments: [
       { id: 'I-2-1', number: 1, dueDate: '06/05/2025', amount: 7600, status: 'Pagado', paidDate: '06/05/2025', receiptNumber: 'REC-014' },
       { id: 'I-2-2', number: 2, dueDate: '06/06/2025', amount: 7400, status: 'Pagado', paidDate: '06/06/2025', receiptNumber: 'REC-032' },
@@ -85,6 +89,8 @@ export const INITIAL_SALES: Sale[] = [
     image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80',
     totalPaid: 52000,
     pendingBalance: 0,
+    latitude: -17.381250,
+    longitude: -66.278540,
     installments: [
       { id: 'I-3-1', number: 1, dueDate: '10/05/2025', amount: 52000, status: 'Pagado', paidDate: '10/05/2025', receiptNumber: 'REC-055' }
     ]
@@ -110,6 +116,8 @@ export const INITIAL_SALES: Sale[] = [
     image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80',
     totalPaid: 18000,
     pendingBalance: 30000,
+    latitude: -17.332560,
+    longitude: -66.218040,
     installments: [
       { id: 'I-4-1', number: 1, dueDate: '14/05/2025', amount: 9600, status: 'Pagado', paidDate: '14/05/2025', receiptNumber: 'REC-061' },
       { id: 'I-4-2', number: 2, dueDate: '14/06/2025', amount: 8400, status: 'Pagado', paidDate: '14/06/2025', receiptNumber: 'REC-080' },
@@ -139,6 +147,8 @@ export const INITIAL_SALES: Sale[] = [
     image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80',
     totalPaid: 62000,
     pendingBalance: 0,
+    latitude: -17.544700,
+    longitude: -65.986500,
     installments: [
       { id: 'I-5-1', number: 1, dueDate: '18/05/2025', amount: 62000, status: 'Pagado', paidDate: '18/05/2025', receiptNumber: 'REC-092' }
     ]
@@ -163,7 +173,9 @@ export const INITIAL_SALES: Sale[] = [
     observations: 'Trámite de minuta y registro catastral finalizado.',
     image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=600&q=80',
     totalPaid: 42000,
-    pendingBalance: 0
+    pendingBalance: 0,
+    latitude: -17.404390,
+    longitude: -66.041680
   },
   {
     id: 'V-007',
@@ -185,7 +197,9 @@ export const INITIAL_SALES: Sale[] = [
     observations: 'Venta con entrega inmediata de testimonios.',
     image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80',
     totalPaid: 39000,
-    pendingBalance: 0
+    pendingBalance: 0,
+    latitude: -17.381390,
+    longitude: -66.278670
   },
   {
     id: 'V-008',
@@ -207,7 +221,9 @@ export const INITIAL_SALES: Sale[] = [
     observations: 'Esperando confirmación bancaria para segundo desembolso.',
     image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80',
     totalPaid: 16500,
-    pendingBalance: 25000
+    pendingBalance: 25000,
+    latitude: -17.332680,
+    longitude: -66.218150
   },
   {
     id: 'V-009',
@@ -229,7 +245,9 @@ export const INITIAL_SALES: Sale[] = [
     observations: 'Venta en efectivo con recibo oficial.',
     image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80',
     totalPaid: 46000,
-    pendingBalance: 0
+    pendingBalance: 0,
+    latitude: -17.542630,
+    longitude: -65.986560
   },
   {
     id: 'V-010',
@@ -251,7 +269,9 @@ export const INITIAL_SALES: Sale[] = [
     observations: 'Lote individual en urbanización La Florida.',
     image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=600&q=80',
     totalPaid: 35250,
-    pendingBalance: 0
+    pendingBalance: 0,
+    latitude: -17.551220,
+    longitude: -66.142080
   },
   {
     id: 'V-011',
@@ -273,7 +293,9 @@ export const INITIAL_SALES: Sale[] = [
     observations: 'Comprador directo con firma en notaría.',
     image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80',
     totalPaid: 48000,
-    pendingBalance: 0
+    pendingBalance: 0,
+    latitude: -17.543250,
+    longitude: -65.986480
   },
   {
     id: 'V-012',
@@ -295,7 +317,9 @@ export const INITIAL_SALES: Sale[] = [
     observations: 'Venta cerrada en feria inmobiliaria.',
     image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=600&q=80',
     totalPaid: 50000,
-    pendingBalance: 0
+    pendingBalance: 0,
+    latitude: -17.404510,
+    longitude: -66.041820
   }
 ];
 
@@ -524,6 +548,9 @@ export const INITIAL_PROPERTIES: Property[] = [
   {
     id: 'PROP-001',
     title: 'Casa en Villa 1ro de Mayo',
+    propertyName: 'Residencia Familiar Villa 1ro de Mayo',
+    ownerNames: ['Roberto Morales Guzmán', 'Elena Torrez de Morales'],
+    urbanizationName: 'Villa Bonita',
     type: 'Casa',
     operation: 'Venta',
     location: 'Villa 1ro de Mayo - Cochabamba',
@@ -542,6 +569,9 @@ export const INITIAL_PROPERTIES: Property[] = [
   {
     id: 'PROP-002',
     title: 'Departamento en Zona Norte',
+    propertyName: 'Condominio Torre del Norte - Piso 4',
+    ownerNames: ['Carlos Alberto Ruiz'],
+    urbanizationName: 'Los Pinos',
     type: 'Departamento',
     operation: 'Alquiler',
     location: 'Zona Norte - Cochabamba',
@@ -561,6 +591,9 @@ export const INITIAL_PROPERTIES: Property[] = [
   {
     id: 'PROP-003',
     title: 'Terreno en Villapagador',
+    propertyName: 'Lote Urbano Amurallado Villapagador',
+    ownerNames: ['Fernando Morales', 'Patricia Sánchez'],
+    urbanizationName: 'Valle Verde',
     type: 'Terreno',
     operation: 'Anticrético',
     location: 'Villapagador - Cochabamba',
@@ -578,6 +611,9 @@ export const INITIAL_PROPERTIES: Property[] = [
   {
     id: 'PROP-004',
     title: 'Chalet Familiar en Tiquipaya',
+    propertyName: 'Quinta Campestre Las Magnolias',
+    ownerNames: ['Jorge Mendoza Vargas'],
+    urbanizationName: 'El Mirador',
     type: 'Casa',
     operation: 'Venta',
     location: 'Tiquipaya - Cochabamba',
@@ -596,6 +632,9 @@ export const INITIAL_PROPERTIES: Property[] = [
   {
     id: 'PROP-005',
     title: 'Lote en Urbanización Los Pinos',
+    propertyName: 'Parcela Esquinera Los Pinos M-2',
+    ownerNames: ['Inmobiliaria Nuevas Raíces S.R.L.'],
+    urbanizationName: 'Los Pinos',
     type: 'Terreno',
     operation: 'Venta',
     location: 'Los Pinos - Cochabamba',
@@ -613,6 +652,9 @@ export const INITIAL_PROPERTIES: Property[] = [
   {
     id: 'PROP-006',
     title: 'Local Comercial en Avenida Principal',
+    propertyName: 'Salón Comercial América Este',
+    ownerNames: ['Luis Fernández', 'Ana García'],
+    urbanizationName: 'La Florida',
     type: 'Local Comercial',
     operation: 'Alquiler',
     location: 'Av. América Este - Cochabamba',
@@ -640,6 +682,12 @@ export const INITIAL_URBANIZATIONS: Urbanization[] = [
     availableLots: 36,
     image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80',
     pricePerM2: 150,
+    latitude: -17.5428,
+    longitude: -65.9862,
+    mainAvenueName: 'Av. Principal Simón Bolívar (25m de ancho con camellón)',
+    internalStreets: ['Calle 1 Los Sauces', 'Calle 2 Las Palmeras', 'Pasaje El Manantial (Sin salida)'],
+    avenueLotsCount: 8,
+    cornerLotsCount: 6,
     amenities: ['Agua potable', 'Luz eléctrica', 'Vías enripiadas', 'Parque infantil', 'Canchas polifuncionales'],
     description: 'Nuestra urbanización estrella, rodeada de áreas verdes y vistas majestuosas a las montañas. Todos los trámites municipales aprobados.'
   },
@@ -653,6 +701,12 @@ export const INITIAL_URBANIZATIONS: Urbanization[] = [
     availableLots: 28,
     image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=800&q=80',
     pricePerM2: 120,
+    latitude: -17.4042,
+    longitude: -66.0415,
+    mainAvenueName: 'Av. Circunvalación Los Pinos (22m con ciclovía)',
+    internalStreets: ['Calle El Bosque', 'Calle Las Retamas', 'Pasaje 1 (Interior)'],
+    avenueLotsCount: 6,
+    cornerLotsCount: 4,
     amenities: ['Tendido eléctrico', 'Alcantarillado en ejecución', 'Transporte público directo', 'Áreas de recreación'],
     description: 'Zona de rápida plusvalía con acceso pavimentado y transporte continuo a minutos del centro de Sacaba.'
   },
@@ -666,6 +720,12 @@ export const INITIAL_URBANIZATIONS: Urbanization[] = [
     availableLots: 25,
     image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
     pricePerM2: 140,
+    latitude: -17.3812,
+    longitude: -66.2785,
+    mainAvenueName: 'Av. Ecológica Valle Verde (20m)',
+    internalStreets: ['Calle Los Ceibos', 'Calle Los Álamos', 'Pasaje Río Verde (Fondo)'],
+    avenueLotsCount: 5,
+    cornerLotsCount: 4,
     amenities: ['Agua de vertiente propia', 'Luz trifásica', 'Seguridad perimetral', 'Ciclovía interna'],
     description: 'Entorno campestre con excelente microclima, ideal para casas de campo o residencia permanente.'
   },
@@ -679,6 +739,12 @@ export const INITIAL_URBANIZATIONS: Urbanization[] = [
     availableLots: 23,
     image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80',
     pricePerM2: 160,
+    latitude: -17.3325,
+    longitude: -66.2180,
+    mainAvenueName: 'Av. Panorámica El Mirador (24m)',
+    internalStreets: ['Calle Del Sol', 'Calle La Cima', 'Pasaje Las Nubes (Sin salida)'],
+    avenueLotsCount: 4,
+    cornerLotsCount: 3,
     amenities: ['Mirador panorámico', 'Calles empedradas', 'Club house', 'Energía solar comunitaria'],
     description: 'Vistas panorámicas inolvidables de todo el valle cochabambino con máxima tranquilidad.'
   },
@@ -692,29 +758,65 @@ export const INITIAL_URBANIZATIONS: Urbanization[] = [
     availableLots: 70,
     image: 'https://images.unsplash.com/photo-1511497584788-87676104235f?auto=format&fit=crop&w=800&q=80',
     pricePerM2: 95,
+    latitude: -17.5512,
+    longitude: -66.1420,
+    mainAvenueName: 'Av. Troncal Industrial La Florida (30m de calzada)',
+    internalStreets: ['Calle Secundaria 1', 'Calle Secundaria 2', 'Pasaje de Servicio'],
+    avenueLotsCount: 6,
+    cornerLotsCount: 4,
     amenities: ['Lotes industriales y residenciales', 'Vías anchas para transporte pesado', 'Agua de pozo profundo'],
-    description: 'Excelente para proyectos mixtos, depósitos o viviendas a precios de preventa inigualables.'
+    description: 'Excelente para urbanizaciones mixtas, depósitos o viviendas a precios de preventa inigualables.'
   }
 ];
 
 export const INITIAL_LOTS: Lot[] = [
-  { id: 'L-01', lotNumber: 'Lote 1', block: 'Manzano 1', urbanizationId: 'URB-01', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Vendido', buyerName: 'Jorge Mendoza', front: 10, depth: 30 },
-  { id: 'L-02', lotNumber: 'Lote 2', block: 'Manzano 1', urbanizationId: 'URB-01', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Disponible', front: 10, depth: 30 },
-  { id: 'L-03', lotNumber: 'Lote 3', block: 'Manzano 1', urbanizationId: 'URB-01', surface: 320, priceBs: 48000, priceUsd: 6900, status: 'Disponible', front: 10, depth: 32 },
-  { id: 'L-04', lotNumber: 'Lote 4', block: 'Manzano 1', urbanizationId: 'URB-01', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Reservado', buyerName: 'Claudia Salinas', front: 10, depth: 30 },
-  { id: 'L-05', lotNumber: 'Lote 5', block: 'Manzano 1', urbanizationId: 'URB-01', surface: 320, priceBs: 46000, priceUsd: 6650, status: 'Vendido', buyerName: 'Fernando Morales', front: 10, depth: 32 },
-  { id: 'L-06', lotNumber: 'Lote 6', block: 'Manzano 2', urbanizationId: 'URB-01', surface: 350, priceBs: 52500, priceUsd: 7600, status: 'Disponible', front: 12, depth: 29 },
-  { id: 'L-07', lotNumber: 'Lote 7', block: 'Manzano 2', urbanizationId: 'URB-01', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Disponible', front: 10, depth: 30 },
-  { id: 'L-08', lotNumber: 'Lote 8', block: 'Manzano 2', urbanizationId: 'URB-01', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Reservado', buyerName: 'Mario Vargas', front: 10, depth: 30 },
-  { id: 'L-09', lotNumber: 'Lote 9', block: 'Manzano 2', urbanizationId: 'URB-01', surface: 340, priceBs: 48000, priceUsd: 6950, status: 'Vendido', buyerName: 'Jorge Mendoza', front: 11, depth: 31 },
-  { id: 'L-10', lotNumber: 'Lote 10', block: 'Manzano 3', urbanizationId: 'URB-01', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Disponible', front: 10, depth: 30 },
-  { id: 'L-11', lotNumber: 'Lote 11', block: 'Manzano 3', urbanizationId: 'URB-01', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Disponible', front: 10, depth: 30 },
-  { id: 'L-12', lotNumber: 'Lote 12', block: 'Manzano 3', urbanizationId: 'URB-01', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Vendido', buyerName: 'Juan Pérez', front: 10, depth: 30 },
-  { id: 'L-13', lotNumber: 'Lote 13', block: 'Manzano 3', urbanizationId: 'URB-01', surface: 310, priceBs: 46500, priceUsd: 6700, status: 'Disponible', front: 10, depth: 31 },
-  { id: 'L-14', lotNumber: 'Lote 14', block: 'Manzano 4', urbanizationId: 'URB-01', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Disponible', front: 10, depth: 30 },
-  { id: 'L-15', lotNumber: 'Lote 15', block: 'Manzano 4', urbanizationId: 'URB-01', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Reservado', buyerName: 'Sara Lima', front: 10, depth: 30 },
-  { id: 'L-16', lotNumber: 'Lote 16', block: 'Manzano 4', urbanizationId: 'URB-01', surface: 360, priceBs: 54000, priceUsd: 7800, status: 'Disponible', front: 12, depth: 30 },
-  { id: 'L-20', lotNumber: 'Lote 20', block: 'Manzano 5', urbanizationId: 'URB-01', surface: 380, priceBs: 62000, priceUsd: 8900, status: 'Vendido', buyerName: 'Luis Fernández', front: 12, depth: 31.6 }
+  // URB-01: Villa Bonita
+  { id: 'L-01', lotNumber: 'Lote 1', block: 'Manzano 1', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Vendido', buyerName: 'Jorge Mendoza', front: 10, depth: 30, latitude: -17.542150, longitude: -65.986120, locationType: 'En Esquina', cornerStreets: 'Av. Principal Simón Bolívar y Calle 1', streetName: 'Av. Principal Simón Bolívar', hasAvenueAccess: true },
+  { id: 'L-02', lotNumber: 'Lote 2', block: 'Manzano 1', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Disponible', front: 10, depth: 30, latitude: -17.542280, longitude: -65.986230, locationType: 'Avenida Principal', streetName: 'Av. Principal Simón Bolívar (Frente 25m)', hasAvenueAccess: true },
+  { id: 'L-03', lotNumber: 'Lote 3', block: 'Manzano 1', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 320, priceBs: 48000, priceUsd: 6900, status: 'Disponible', front: 10, depth: 32, latitude: -17.542390, longitude: -65.986340, locationType: 'Avenida Principal', streetName: 'Av. Principal Simón Bolívar', hasAvenueAccess: true },
+  { id: 'L-04', lotNumber: 'Lote 4', block: 'Manzano 1', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'En Moratoria', buyerName: 'Claudia Salinas (Mora 3 cuotas)', front: 10, depth: 30, latitude: -17.542510, longitude: -65.986450, locationType: 'En Medio (Calle Interna)', streetName: 'Calle 1 Los Sauces', hasAvenueAccess: false },
+  { id: 'L-05', lotNumber: 'Lote 5', block: 'Manzano 1', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 320, priceBs: 46000, priceUsd: 6650, status: 'Vendido', buyerName: 'Fernando Morales', front: 10, depth: 32, latitude: -17.542630, longitude: -65.986560, locationType: 'Sin Salida a Avenida', streetName: 'Pasaje El Manantial (Cul-de-sac)', hasAvenueAccess: false },
+  { id: 'L-06', lotNumber: 'Lote 6', block: 'Manzano 2', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 350, priceBs: 52500, priceUsd: 7600, status: 'Disponible', front: 12, depth: 29, latitude: -17.542910, longitude: -65.986150, locationType: 'En Esquina', cornerStreets: 'Av. Principal y Calle 2 Las Palmeras', streetName: 'Av. Principal Simón Bolívar', hasAvenueAccess: true },
+  { id: 'L-07', lotNumber: 'Lote 7', block: 'Manzano 2', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Disponible', front: 10, depth: 30, latitude: -17.543020, longitude: -65.986260, locationType: 'Avenida Principal', streetName: 'Av. Principal Simón Bolívar', hasAvenueAccess: true },
+  { id: 'L-08', lotNumber: 'Lote 8', block: 'Manzano 2', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Reservado', buyerName: 'Mario Vargas', front: 10, depth: 30, latitude: -17.543140, longitude: -65.986370, locationType: 'En Medio (Calle Interna)', streetName: 'Calle 2 Las Palmeras', hasAvenueAccess: false },
+  { id: 'L-09', lotNumber: 'Lote 9', block: 'Manzano 2', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 340, priceBs: 48000, priceUsd: 6950, status: 'Vendido', buyerName: 'Jorge Mendoza', front: 11, depth: 31, latitude: -17.543250, longitude: -65.986480, locationType: 'Sin Salida a Avenida', streetName: 'Pasaje El Manantial (Fondo)', hasAvenueAccess: false },
+  { id: 'L-10', lotNumber: 'Lote 10', block: 'Manzano 3', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Disponible', front: 10, depth: 30, latitude: -17.543500, longitude: -65.986110, locationType: 'Avenida Principal', streetName: 'Av. Principal Simón Bolívar', hasAvenueAccess: true },
+  { id: 'L-11', lotNumber: 'Lote 11', block: 'Manzano 3', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Disponible', front: 10, depth: 30, latitude: -17.543620, longitude: -65.986220, locationType: 'En Medio (Calle Interna)', streetName: 'Calle 1 Los Sauces', hasAvenueAccess: false },
+  { id: 'L-12', lotNumber: 'Lote 12', block: 'Manzano 3', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Vendido', buyerName: 'Juan Pérez', front: 10, depth: 30, latitude: -17.543740, longitude: -65.986330, locationType: 'Avenida Principal', streetName: 'Av. Principal Simón Bolívar', hasAvenueAccess: true },
+  { id: 'L-13', lotNumber: 'Lote 13', block: 'Manzano 3', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 310, priceBs: 46500, priceUsd: 6700, status: 'Disponible', front: 10, depth: 31, latitude: -17.543860, longitude: -65.986440, locationType: 'Sin Salida a Avenida', streetName: 'Pasaje Las Flores (Sin salida)', hasAvenueAccess: false },
+  { id: 'L-14', lotNumber: 'Lote 14', block: 'Manzano 4', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Disponible', front: 10, depth: 30, latitude: -17.544100, longitude: -65.986100, locationType: 'En Esquina', cornerStreets: 'Calle 1 y Calle 2', streetName: 'Calle 1 Los Sauces', hasAvenueAccess: false },
+  { id: 'L-15', lotNumber: 'Lote 15', block: 'Manzano 4', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 300, priceBs: 45000, priceUsd: 6500, status: 'Reservado', buyerName: 'Sara Lima', front: 10, depth: 30, latitude: -17.544210, longitude: -65.986210, locationType: 'En Medio (Calle Interna)', streetName: 'Calle 2 Las Palmeras', hasAvenueAccess: false },
+  { id: 'L-16', lotNumber: 'Lote 16', block: 'Manzano 4', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 360, priceBs: 54000, priceUsd: 7800, status: 'Disponible', front: 12, depth: 30, latitude: -17.544330, longitude: -65.986320, locationType: 'Avenida Principal', streetName: 'Av. Principal Simón Bolívar', hasAvenueAccess: true },
+  { id: 'L-20', lotNumber: 'Lote 20', block: 'Manzano 5', urbanizationId: 'URB-01', urbanizationName: 'Villa Bonita', surface: 380, priceBs: 62000, priceUsd: 8900, status: 'Vendido', buyerName: 'Luis Fernández', front: 12, depth: 31.6, latitude: -17.544700, longitude: -65.986500, locationType: 'En Esquina', cornerStreets: 'Av. Principal y Rotonda de Ingreso', streetName: 'Av. Principal Simón Bolívar', hasAvenueAccess: true },
+
+  // URB-02: Los Pinos
+  { id: 'LP-01', lotNumber: 'Lote 1', block: 'Manzano 1', urbanizationId: 'URB-02', urbanizationName: 'Los Pinos', surface: 300, priceBs: 36000, priceUsd: 5200, status: 'Disponible', front: 10, depth: 30, latitude: -17.403910, longitude: -66.041210, locationType: 'En Esquina', cornerStreets: 'Av. Circunvalación y Calle El Bosque', streetName: 'Av. Circunvalación Los Pinos', hasAvenueAccess: true },
+  { id: 'LP-02', lotNumber: 'Lote 2', block: 'Manzano 1', urbanizationId: 'URB-02', urbanizationName: 'Los Pinos', surface: 300, priceBs: 36000, priceUsd: 5200, status: 'Disponible', front: 10, depth: 30, latitude: -17.404020, longitude: -66.041330, locationType: 'Avenida Principal', streetName: 'Av. Circunvalación Los Pinos', hasAvenueAccess: true },
+  { id: 'LP-03', lotNumber: 'Lote 3', block: 'Manzano 1', urbanizationId: 'URB-02', urbanizationName: 'Los Pinos', surface: 310, priceBs: 42000, priceUsd: 6050, status: 'Vendido', buyerName: 'Patricia Sánchez', front: 10, depth: 31, latitude: -17.404390, longitude: -66.041680, locationType: 'Avenida Principal', streetName: 'Av. Circunvalación Los Pinos', hasAvenueAccess: true },
+  { id: 'LP-04', lotNumber: 'Lote 4', block: 'Manzano 1', urbanizationId: 'URB-02', urbanizationName: 'Los Pinos', surface: 300, priceBs: 36000, priceUsd: 5200, status: 'En Moratoria', buyerName: 'Gonzalo Claros (Impago 4 meses)', front: 10, depth: 30, latitude: -17.404150, longitude: -66.041440, locationType: 'En Medio (Calle Interna)', streetName: 'Calle Las Retamas', hasAvenueAccess: false },
+  { id: 'LP-07', lotNumber: 'Lote 7', block: 'Manzano 2', urbanizationId: 'URB-02', urbanizationName: 'Los Pinos', surface: 320, priceBs: 38400, priceUsd: 5500, status: 'Disponible', front: 10, depth: 32, latitude: -17.404500, longitude: -66.041100, locationType: 'Sin Salida a Avenida', streetName: 'Pasaje 1 (Interior)', hasAvenueAccess: false },
+  { id: 'LP-08', lotNumber: 'Lote 8', block: 'Manzano 2', urbanizationId: 'URB-02', urbanizationName: 'Los Pinos', surface: 350, priceBs: 38000, priceUsd: 5460, status: 'Vendido', buyerName: 'María López', front: 11, depth: 31.8, latitude: -17.404280, longitude: -66.041530, locationType: 'Avenida Principal', streetName: 'Av. Circunvalación Los Pinos', hasAvenueAccess: true },
+  { id: 'LP-09', lotNumber: 'Lote 9', block: 'Manzano 2', urbanizationId: 'URB-02', urbanizationName: 'Los Pinos', surface: 300, priceBs: 36000, priceUsd: 5200, status: 'Reservado', buyerName: 'Víctor Alarcón', front: 10, depth: 30, latitude: -17.404610, longitude: -66.041220, locationType: 'En Esquina', cornerStreets: 'Calle Las Retamas y Pasaje 1', streetName: 'Calle Las Retamas', hasAvenueAccess: false },
+
+  // URB-03: Valle Verde
+  { id: 'VV-01', lotNumber: 'Lote 1', block: 'Manzano 1', urbanizationId: 'URB-03', urbanizationName: 'Valle Verde', surface: 350, priceBs: 49000, priceUsd: 7050, status: 'Disponible', front: 12, depth: 29.2, latitude: -17.380900, longitude: -66.278200, locationType: 'En Esquina', cornerStreets: 'Av. Ecológica y Calle Los Ceibos', streetName: 'Av. Ecológica Valle Verde', hasAvenueAccess: true },
+  { id: 'VV-05', lotNumber: 'Lote 5', block: 'Manzano 1', urbanizationId: 'URB-03', urbanizationName: 'Valle Verde', surface: 320, priceBs: 44800, priceUsd: 6450, status: 'En Moratoria', buyerName: 'Marcos Quiroga (Mora crédito)', front: 10, depth: 32, latitude: -17.381020, longitude: -66.278330, locationType: 'En Medio (Calle Interna)', streetName: 'Calle Los Ceibos', hasAvenueAccess: false },
+  { id: 'VV-10', lotNumber: 'Lote 10', block: 'Manzano 2', urbanizationId: 'URB-03', urbanizationName: 'Valle Verde', surface: 330, priceBs: 39000, priceUsd: 5600, status: 'Vendido', buyerName: 'Roberto Vargas', front: 10, depth: 33, latitude: -17.381390, longitude: -66.278670, locationType: 'Avenida Principal', streetName: 'Av. Ecológica Valle Verde', hasAvenueAccess: true },
+  { id: 'VV-12', lotNumber: 'Lote 12', block: 'Manzano 3', urbanizationId: 'URB-03', urbanizationName: 'Valle Verde', surface: 300, priceBs: 42000, priceUsd: 6050, status: 'Disponible', front: 10, depth: 30, latitude: -17.381500, longitude: -66.278450, locationType: 'Sin Salida a Avenida', streetName: 'Pasaje Río Verde (Fondo)', hasAvenueAccess: false },
+  { id: 'VV-15', lotNumber: 'Lote 15', block: 'Manzano 4', urbanizationId: 'URB-03', urbanizationName: 'Valle Verde', surface: 400, priceBs: 52000, priceUsd: 7480, status: 'Vendido', buyerName: 'Carlos Ruiz', front: 13, depth: 30.8, latitude: -17.381250, longitude: -66.278540, locationType: 'Avenida Principal', streetName: 'Av. Ecológica Valle Verde', hasAvenueAccess: true },
+
+  // URB-04: El Mirador
+  { id: 'EM-01', lotNumber: 'Lote 1', block: 'Manzano 1', urbanizationId: 'URB-04', urbanizationName: 'El Mirador', surface: 300, priceBs: 48000, priceUsd: 6900, status: 'Disponible', front: 10, depth: 30, latitude: -17.332300, longitude: -66.217800, locationType: 'En Esquina', cornerStreets: 'Av. Panorámica y Calle Del Sol', streetName: 'Av. Panorámica El Mirador', hasAvenueAccess: true },
+  { id: 'EM-06', lotNumber: 'Lote 6', block: 'Manzano 1', urbanizationId: 'URB-04', urbanizationName: 'El Mirador', surface: 350, priceBs: 48000, priceUsd: 6900, status: 'Vendido', buyerName: 'Ana García', front: 11, depth: 31.8, latitude: -17.332450, longitude: -66.217950, locationType: 'Avenida Principal', streetName: 'Av. Panorámica El Mirador', hasAvenueAccess: true },
+  { id: 'EM-11', lotNumber: 'Lote 11', block: 'Manzano 2', urbanizationId: 'URB-04', urbanizationName: 'El Mirador', surface: 300, priceBs: 48000, priceUsd: 6900, status: 'En Moratoria', buyerName: 'David Paredes (Mora 2 meses)', front: 10, depth: 30, latitude: -17.332560, longitude: -66.218050, locationType: 'En Medio (Calle Interna)', streetName: 'Calle La Cima', hasAvenueAccess: false },
+  { id: 'EM-14', lotNumber: 'Lote 14', block: 'Manzano 3', urbanizationId: 'URB-04', urbanizationName: 'El Mirador', surface: 300, priceBs: 41500, priceUsd: 5970, status: 'Vendido', buyerName: 'Cecilia Flores', front: 10, depth: 30, latitude: -17.332680, longitude: -66.218150, locationType: 'Sin Salida a Avenida', streetName: 'Pasaje Las Nubes (Sin salida)', hasAvenueAccess: false },
+
+  // URB-05: La Florida
+  { id: 'LF-01', lotNumber: 'Lote 1', block: 'Manzano 1', urbanizationId: 'URB-05', urbanizationName: 'La Florida', surface: 400, priceBs: 38000, priceUsd: 5460, status: 'Disponible', front: 13, depth: 30.8, latitude: -17.551000, longitude: -66.141800, locationType: 'En Esquina', cornerStreets: 'Av. Troncal y Calle Secundaria 1', streetName: 'Av. Troncal Industrial La Florida', hasAvenueAccess: true },
+  { id: 'LF-02', lotNumber: 'Lote 2', block: 'Manzano 1', urbanizationId: 'URB-05', urbanizationName: 'La Florida', surface: 400, priceBs: 38000, priceUsd: 5460, status: 'Disponible', front: 13, depth: 30.8, latitude: -17.551120, longitude: -66.141920, locationType: 'Avenida Principal', streetName: 'Av. Troncal Industrial La Florida', hasAvenueAccess: true },
+  { id: 'LF-03', lotNumber: 'Lote 3', block: 'Manzano 1', urbanizationId: 'URB-05', urbanizationName: 'La Florida', surface: 420, priceBs: 39900, priceUsd: 5730, status: 'En Moratoria', buyerName: 'Santiago Vega (Incumplimiento)', front: 14, depth: 30, latitude: -17.551240, longitude: -66.142040, locationType: 'En Medio (Calle Interna)', streetName: 'Calle Secundaria 1', hasAvenueAccess: false },
+  { id: 'LF-05', lotNumber: 'Lote 5', block: 'Manzano 2', urbanizationId: 'URB-05', urbanizationName: 'La Florida', surface: 380, priceBs: 36100, priceUsd: 5190, status: 'Reservado', buyerName: 'Lucía Campero', front: 12, depth: 31.6, latitude: -17.551360, longitude: -66.142160, locationType: 'Avenida Principal', streetName: 'Av. Troncal Industrial La Florida', hasAvenueAccess: true },
+  { id: 'LF-10', lotNumber: 'Lote 10', block: 'Manzano 2', urbanizationId: 'URB-05', urbanizationName: 'La Florida', surface: 450, priceBs: 42750, priceUsd: 6140, status: 'Disponible', front: 15, depth: 30, latitude: -17.551480, longitude: -66.142280, locationType: 'Sin Salida a Avenida', streetName: 'Pasaje de Servicio (Fondo)', hasAvenueAccess: false },
 ];
 
 export const INITIAL_CLIENTS: Client[] = [
@@ -725,9 +827,30 @@ export const INITIAL_CLIENTS: Client[] = [
     phone: '71234567',
     email: 'juan.perez@gmail.com',
     address: 'Av. Heroínas #450, Cochabamba',
+    birthDate: '1984-04-18',
+    occupation: 'Ingeniero Civil',
+    civilStatus: 'Casado(a)',
     status: 'Activo',
     purchasedLots: ['Villa Bonita - Lote 12'],
-    totalInvested: 45000
+    totalInvested: 45000,
+    documents: [
+      {
+        id: 'DOC-1',
+        name: 'Cedula_Identidad_Anverso_Reverso.pdf',
+        type: 'pdf',
+        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        uploadDate: '05/05/2025',
+        size: '1.2 MB'
+      },
+      {
+        id: 'DOC-2',
+        name: 'Foto_Carnet_Verificacion.jpg',
+        type: 'image',
+        fileUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+        uploadDate: '05/05/2025',
+        size: '340 KB'
+      }
+    ]
   },
   {
     id: 'C-002',
@@ -736,9 +859,22 @@ export const INITIAL_CLIENTS: Client[] = [
     phone: '76543210',
     email: 'maria.lopez@yahoo.com',
     address: 'Calle España #123, Cochabamba',
+    birthDate: '1990-09-22',
+    occupation: 'Médico Cirujano',
+    civilStatus: 'Soltero(a)',
     status: 'Activo',
     purchasedLots: ['Los Pinos - Lote 8'],
-    totalInvested: 38000
+    totalInvested: 38000,
+    documents: [
+      {
+        id: 'DOC-3',
+        name: 'CI_Maria_Lopez.pdf',
+        type: 'pdf',
+        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        uploadDate: '06/05/2025',
+        size: '890 KB'
+      }
+    ]
   },
   {
     id: 'C-003',
@@ -747,9 +883,13 @@ export const INITIAL_CLIENTS: Client[] = [
     phone: '72345678',
     email: 'carlos.ruiz@hotmail.com',
     address: 'Av. Libertador #789, Cochabamba',
+    birthDate: '1979-11-05',
+    occupation: 'Comerciante Independiente',
+    civilStatus: 'Casado(a)',
     status: 'Activo',
     purchasedLots: ['Valle Verde - Lote 15'],
-    totalInvested: 52000
+    totalInvested: 52000,
+    documents: []
   },
   {
     id: 'C-004',
@@ -758,9 +898,22 @@ export const INITIAL_CLIENTS: Client[] = [
     phone: '79812345',
     email: 'ana.garcia@outlook.com',
     address: 'Av. América Oeste #890, Cochabamba',
+    birthDate: '1993-02-14',
+    occupation: 'Arquitecta',
+    civilStatus: 'Soltero(a)',
     status: 'Activo',
     purchasedLots: ['El Mirador - Lote 6'],
-    totalInvested: 48000
+    totalInvested: 48000,
+    documents: [
+      {
+        id: 'DOC-4',
+        name: 'Comprobante_Pago_Reserva.pdf',
+        type: 'pdf',
+        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        uploadDate: '14/05/2025',
+        size: '420 KB'
+      }
+    ]
   },
   {
     id: 'C-005',
@@ -769,9 +922,13 @@ export const INITIAL_CLIENTS: Client[] = [
     phone: '73456789',
     email: 'luis.fer@gmail.com',
     address: 'Zona Queru Queru, Cochabamba',
+    birthDate: '1982-08-30',
+    occupation: 'Auditor Financiero',
+    civilStatus: 'Casado(a)',
     status: 'Activo',
     purchasedLots: ['Villa Bonita - Lote 20'],
-    totalInvested: 62000
+    totalInvested: 62000,
+    documents: []
   }
 ];
 

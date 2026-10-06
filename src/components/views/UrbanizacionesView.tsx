@@ -29,11 +29,11 @@ export const UrbanizacionesView: React.FC<UrbanizacionesViewProps> = ({
             <Trees className="w-6 h-6 text-emerald-200" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Urbanizaciones
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Administración integral de macroproyectos urbanos, terrenos y lotizaciones.
+            <p className="text-sm text-slate-600 mt-0.5 font-medium">
+              Administración integral de urbanizaciones, terrenos y lotizaciones.
             </p>
           </div>
         </div>
@@ -43,15 +43,15 @@ export const UrbanizacionesView: React.FC<UrbanizacionesViewProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Buscar proyecto..."
+              placeholder="Buscar urbanización..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600/20"
+              className="pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600/20"
             />
           </div>
-          <button className="px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center gap-1.5">
+          <button className="px-4 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-sm font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5">
             <Plus className="w-4 h-4" />
-            <span>Nuevo proyecto</span>
+            <span>Nueva Urbanización</span>
           </button>
         </div>
       </div>

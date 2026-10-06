@@ -14,7 +14,11 @@ import {
   ChevronRight, 
   ChevronLeft,
   Calendar,
-  ExternalLink
+  ExternalLink,
+  MapPin,
+  Navigation,
+  Printer,
+  Landmark
 } from 'lucide-react';
 import { Sale } from '../../types';
 
@@ -23,6 +27,7 @@ interface VentasViewProps {
   onOpenContract: (sale: Sale) => void;
   onOpenClientProfile: (clientId: string) => void;
   onOpenNewSale: () => void;
+  onOpenPaymentPlan?: (sale: Sale) => void;
 }
 
 export const VentasView: React.FC<VentasViewProps> = ({
@@ -30,6 +35,7 @@ export const VentasView: React.FC<VentasViewProps> = ({
   onOpenContract,
   onOpenClientProfile,
   onOpenNewSale,
+  onOpenPaymentPlan,
 }) => {
   const [selectedMonth, setSelectedMonth] = useState('Mayo 2025');
   const [periodFilter, setPeriodFilter] = useState<'mes' | 'semana' | 'año'>('mes');
@@ -455,7 +461,20 @@ export const VentasView: React.FC<VentasViewProps> = ({
                             {sale.clientName}
                           </td>
                           <td className="py-3.5 px-4 text-slate-600">
-                            {sale.urbanization} - {sale.lot}
+                            <div className="font-semibold text-slate-800">{sale.urbanization} - {sale.lot}</div>
+                            {sale.latitude && sale.longitude ? (
+                              <a
+                                href={`https://www.google.com/maps?q=${sale.latitude},${sale.longitude}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[10.5px] text-emerald-800 hover:text-emerald-950 font-semibold hover:underline mt-0.5"
+                                title="Ver en Google Maps"
+                              >
+                                <MapPin className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                                <span>{sale.latitude.toFixed(4)}, {sale.longitude.toFixed(4)}</span>
+                              </a>
+                            ) : null}
                           </td>
                           <td className="py-3.5 px-4">
                             <span
@@ -483,16 +502,31 @@ export const VentasView: React.FC<VentasViewProps> = ({
                             </span>
                           </td>
                           <td className="py-3.5 px-4 text-center">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveSaleId(sale.id);
-                              }}
-                              className="w-7 h-7 inline-flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 hover:text-emerald-700 transition-colors"
-                              title="Ver detalles"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center justify-center gap-1.5">
+                              {onOpenPaymentPlan && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOpenPaymentPlan(sale);
+                                  }}
+                                  className="px-2.5 py-1.5 rounded-lg bg-[#0d3f2b] hover:bg-[#072a1c] text-white text-[11px] font-bold inline-flex items-center gap-1 shadow-2xs cursor-pointer transition-colors"
+                                  title="Ver e Imprimir Plan de Pagos estilo Banco"
+                                >
+                                  <Printer className="w-3.5 h-3.5 text-amber-300" />
+                                  <span>Plan de Pagos</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveSaleId(sale.id);
+                                }}
+                                className="w-7 h-7 inline-flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 hover:text-emerald-700 transition-colors cursor-pointer"
+                                title="Ver detalles"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -658,6 +692,31 @@ export const VentasView: React.FC<VentasViewProps> = ({
               </div>
             </div>
 
+            {/* Ubicación en el Plano de la Urbanización */}
+            <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-emerald-700" />
+                Ubicación en el Plano de la Urbanización
+              </h3>
+              
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
+                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono bg-white p-2 rounded-lg border border-slate-200">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-sans block">Urbanización</span>
+                    <span className="font-bold text-slate-800 font-sans">
+                      {activeSale.urbanization}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-sans block">Ubicación</span>
+                    <span className="font-bold text-emerald-800 font-sans">
+                      {activeSale.lot} ({activeSale.block})
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Observaciones */}
             <div className="space-y-1.5 pt-2 border-t border-slate-100 text-xs">
               <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wider">
@@ -669,15 +728,28 @@ export const VentasView: React.FC<VentasViewProps> = ({
               </p>
             </div>
 
-            {/* Action Button: Ver contrato / documentos */}
-            <button
-              onClick={() => onOpenContract(activeSale)}
-              className="w-full py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100/90 text-emerald-900 font-bold text-xs rounded-xl border border-emerald-200 shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <FileText className="w-4 h-4 text-emerald-700" />
-              <span>Ver contrato / documentos</span>
-              <ChevronRight className="w-4 h-4 ml-auto text-emerald-700" />
-            </button>
+            {/* Action Buttons: Plan de Pagos & Ver contrato */}
+            <div className="space-y-2 pt-1">
+              {onOpenPaymentPlan && (
+                <button
+                  onClick={() => onOpenPaymentPlan(activeSale)}
+                  className="w-full py-3 px-4 bg-[#0d3f2b] hover:bg-[#072a1c] text-white font-black text-xs rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Landmark className="w-4 h-4 text-amber-300" />
+                  <span>Imprimir Plan de Pagos (Estilo Banco)</span>
+                  <Printer className="w-4 h-4 ml-auto text-emerald-200" />
+                </button>
+              )}
+
+              <button
+                onClick={() => onOpenContract(activeSale)}
+                className="w-full py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100/90 text-emerald-900 font-bold text-xs rounded-xl border border-emerald-200 shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <FileText className="w-4 h-4 text-emerald-700" />
+                <span>Ver contrato / documentos</span>
+                <ChevronRight className="w-4 h-4 ml-auto text-emerald-700" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

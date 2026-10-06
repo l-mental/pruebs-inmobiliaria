@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Menu className="w-5 h-5" />
           </button>
         )}
-        <Logo subtitle="Tu hogar, nuestro compromiso" />
+        <Logo subtitle="Crea tu origen y construye tu futuro..." />
       </div>
 
       {/* Central poetic motto with green leaf accents (as seen in image.png) */}

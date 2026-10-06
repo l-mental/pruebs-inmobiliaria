@@ -10,13 +10,13 @@ export type TabType = NavTab;
 export type UserRole = 'admin' | 'seller';
 
 export type PaymentModality = 'Contado' | 'Crédito';
-export type SaleStatus = 'Concretada' | 'En proceso' | 'Cancelada';
+export type SaleStatus = 'Concretada' | 'En proceso' | 'Cancelada' | 'En moratoria';
 export type PaymentStatus = 'Pagado' | 'Pendiente' | 'Atrasado';
 export type PaymentMethod = 'Contado' | 'Transferencia' | 'Tarjeta' | 'Efectivo' | 'Cheque';
 export type PropertyType = 'Casa' | 'Departamento' | 'Terreno' | 'Local Comercial';
 export type PropertyOperation = 'Venta' | 'Alquiler' | 'Anticrético';
 export type PropertyStatus = 'Disponible' | 'Reservado' | 'Vendido';
-export type LotStatus = 'Disponible' | 'Reservado' | 'Vendido';
+export type LotStatus = 'Disponible' | 'Reservado' | 'Vendido' | 'En Moratoria';
 
 export interface Installment {
   id: string;
@@ -50,6 +50,8 @@ export interface Sale {
   totalPaid: number;
   pendingBalance: number;
   installments?: Installment[];
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Payment {
@@ -71,6 +73,15 @@ export interface Payment {
   referenceNumber?: string;
 }
 
+export interface ClientDocument {
+  id: string;
+  name: string;
+  type: 'pdf' | 'image' | 'doc';
+  fileUrl: string; // base64, data URL or link
+  uploadDate: string;
+  size?: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -81,7 +92,19 @@ export interface Client {
   status: 'Activo' | 'Inactivo' | 'Potencial';
   purchasedLots: string[];
   totalInvested: number;
+  birthDate?: string; // Fecha de nacimiento (ej. "1988-06-15")
+  occupation?: string; // Ocupación / Profesión
+  civilStatus?: string; // Estado civil: Soltero(a), Casado(a), etc.
+  documents?: ClientDocument[]; // Documentos adjuntos (PDF o Imagen)
+  notes?: string;
 }
+
+export type LotLocationType = 
+  | 'Avenida Principal' 
+  | 'En Esquina' 
+  | 'En Medio (Calle Interna)' 
+  | 'Sin Salida a Avenida' 
+  | 'Pasaje';
 
 export interface Lot {
   id: string;
@@ -96,6 +119,12 @@ export interface Lot {
   buyerName?: string;
   front: number; // meters
   depth: number; // meters
+  latitude?: number;
+  longitude?: number;
+  locationType?: LotLocationType; // 'Avenida Principal' | 'En Esquina' | 'En Medio (Calle Interna)' | 'Sin Salida a Avenida'
+  streetName?: string; // Nombre de la avenida o calle frente al lote
+  cornerStreets?: string; // e.g. "Av. Principal y Calle 2" para lotes en esquina
+  hasAvenueAccess?: boolean; // Indica si tiene salida directa a la avenida
 }
 
 export interface Urbanization {
@@ -110,11 +139,20 @@ export interface Urbanization {
   pricePerM2: number;
   amenities: string[];
   description: string;
+  latitude?: number;
+  longitude?: number;
+  mainAvenueName?: string; // e.g. "Avenida Principal Las Palmeras (25m de ancho)"
+  internalStreets?: string[]; // Vías internas y secundarias
+  avenueLotsCount?: number;
+  cornerLotsCount?: number;
 }
 
 export interface Property {
   id: string;
   title: string;
+  propertyName?: string; // Nombre específico de la propiedad / inmueble
+  ownerNames?: string[]; // Nombres de propietarios / titulares añadidos
+  urbanizationName?: string; // Nombre de la urbanización asociada
   type: PropertyType;
   operation: PropertyOperation;
   location: string;

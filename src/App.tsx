@@ -17,6 +17,9 @@ import { RegistrarVentaModal } from './components/modals/RegistrarVentaModal';
 import { RegistrarPagoModal } from './components/modals/RegistrarPagoModal';
 import { ContratoModal } from './components/modals/ContratoModal';
 import { PropiedadDetailModal } from './components/modals/PropiedadDetailModal';
+import { RegistrarPropiedadModal } from './components/modals/RegistrarPropiedadModal';
+import { RegistrarClienteModal } from './components/modals/RegistrarClienteModal';
+import { PlanPagosModal } from './components/modals/PlanPagosModal';
 
 import { 
   initialSales, 
@@ -25,8 +28,8 @@ import {
   initialUrbanizations, 
   initialLots, 
   initialClients, 
-  initialSellers,
-  initialActivities
+  initialSellers, 
+  initialActivities 
 } from './data/initialData';
 
 import { TabType, UserRole, Sale, Payment, Property, Urbanization, Lot, Client } from './types';
@@ -50,13 +53,19 @@ export default function App() {
   // Modals & Inspection States
   const [isNewSaleModalOpen, setIsNewSaleModalOpen] = useState(false);
   const [isNewPaymentModalOpen, setIsNewPaymentModalOpen] = useState(false);
+  const [isNewPropertyModalOpen, setIsNewPropertyModalOpen] = useState(false);
+  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [contractSale, setContractSale] = useState<Sale | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [paymentPlanClient, setPaymentPlanClient] = useState<Client | null>(null);
+  const [paymentPlanSale, setPaymentPlanSale] = useState<Sale | null>(null);
   const [lotDataForSale, setLotDataForSale] = useState<{
     lotNumber: string;
     urbanizationName: string;
     priceBs: number;
     surface: number;
+    latitude?: number;
+    longitude?: number;
   } | undefined>(undefined);
 
   // Handlers
@@ -136,8 +145,49 @@ export default function App() {
       urbanizationName: urb.name,
       priceBs: lot.priceBs,
       surface: lot.surface,
+      latitude: lot.latitude,
+      longitude: lot.longitude,
     });
     setIsNewSaleModalOpen(true);
+  };
+
+  const handleAddUrbanization = (newUrb: Urbanization, generatedLots?: Lot[]) => {
+    setUrbanizations(prev => [newUrb, ...prev]);
+    if (generatedLots && generatedLots.length > 0) {
+      setLots(prev => [...generatedLots, ...prev]);
+    }
+  };
+
+  const handleAddLot = (newLot: Lot) => {
+    setLots(prev => [newLot, ...prev]);
+    // update urbanization counters
+    setUrbanizations(prev => prev.map(u => {
+      if (u.id === newLot.urbanizationId) {
+        return {
+          ...u,
+          totalLots: u.totalLots + 1,
+          availableLots: newLot.status === 'Disponible' ? u.availableLots + 1 : u.availableLots,
+          soldLots: newLot.status === 'Vendido' ? u.soldLots + 1 : u.soldLots,
+        };
+      }
+      return u;
+    }));
+  };
+
+  const handleUpdateLot = (updatedLot: Lot) => {
+    setLots(prev => prev.map(l => l.id === updatedLot.id ? updatedLot : l));
+  };
+
+  const handleSaveProperty = (newProperty: Property) => {
+    setProperties(prev => [newProperty, ...prev]);
+  };
+
+  const handleSaveClient = (newClient: Client) => {
+    setClients(prev => [newClient, ...prev]);
+  };
+
+  const handleUpdateClient = (updatedClient: Client) => {
+    setClients(prev => prev.map(c => c.id === updatedClient.id ? updatedClient : c));
   };
 
   return (
@@ -194,6 +244,10 @@ export default function App() {
                 setLotDataForSale(undefined);
                 setIsNewSaleModalOpen(true);
               }}
+              onOpenPaymentPlan={(sale) => {
+                setPaymentPlanClient(null);
+                setPaymentPlanSale(sale);
+              }}
             />
           )}
 
@@ -201,8 +255,14 @@ export default function App() {
             <PagosView
               payments={payments}
               sales={sales}
+              lots={lots}
+              urbanizations={urbanizations}
               onOpenNewPayment={() => setIsNewPaymentModalOpen(true)}
               onOpenContract={(sale) => setContractSale(sale)}
+              onOpenPaymentPlan={(sale) => {
+                setPaymentPlanClient(null);
+                setPaymentPlanSale(sale);
+              }}
             />
           )}
 
@@ -211,6 +271,9 @@ export default function App() {
               lots={lots}
               urbanizations={urbanizations}
               onSelectLotForSale={handleSelectLotForSale}
+              onAddUrbanization={handleAddUrbanization}
+              onAddLot={handleAddLot}
+              onUpdateLot={handleUpdateLot}
             />
           )}
 
@@ -218,20 +281,31 @@ export default function App() {
             <PropiedadesView
               properties={properties}
               onSelectProperty={setSelectedProperty}
-              onOpenNewProperty={() => alert('Formulario de alta de nuevo inmueble disponible para administradores.')}
+              onOpenNewProperty={() => setIsNewPropertyModalOpen(true)}
             />
           )}
 
           {currentTab === 'clientes' && (
             <ClientesView
               clients={clients}
-              onOpenNewClient={() => alert('Para registrar un nuevo cliente, puedes iniciar una nueva venta desde el botón "+ Nueva Venta".')}
+              onOpenNewClient={() => setIsNewClientModalOpen(true)}
+              onUpdateClient={handleUpdateClient}
+              onOpenPaymentPlan={(client) => {
+                setPaymentPlanSale(null);
+                setPaymentPlanClient(client);
+              }}
             />
           )}
         </main>
       </div>
 
       {/* Modals */}
+      <RegistrarClienteModal
+        isOpen={isNewClientModalOpen}
+        onClose={() => setIsNewClientModalOpen(false)}
+        onSaveClient={handleSaveClient}
+      />
+
       <RegistrarVentaModal
         isOpen={isNewSaleModalOpen}
         onClose={() => {
@@ -250,10 +324,48 @@ export default function App() {
         onSavePayment={handleSavePayment}
       />
 
+      <RegistrarPropiedadModal
+        isOpen={isNewPropertyModalOpen}
+        onClose={() => setIsNewPropertyModalOpen(false)}
+        onSaveProperty={handleSaveProperty}
+        urbanizations={urbanizations}
+      />
+
       <ContratoModal
         isOpen={!!contractSale}
         onClose={() => setContractSale(null)}
         sale={contractSale}
+      />
+
+      <PlanPagosModal
+        isOpen={!!paymentPlanClient || !!paymentPlanSale}
+        onClose={() => {
+          setPaymentPlanClient(null);
+          setPaymentPlanSale(null);
+        }}
+        client={paymentPlanClient}
+        sale={paymentPlanSale}
+        sales={sales}
+        payments={payments}
+        onRegisterInstallmentPayment={(saleId, installmentNumber, amount, clientName, urbanization, lot) => {
+          const today = new Date();
+          const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+          const newPayment: Payment = {
+            id: `P-${Math.floor(100 + Math.random() * 900)}`,
+            saleId,
+            date: dateStr,
+            clientName,
+            urbanization,
+            lot,
+            amount,
+            currency: 'Bs.',
+            paymentMethod: 'Transferencia',
+            type: 'cliente',
+            status: 'Pagado',
+            concept: `Pago de Cuota N° ${installmentNumber}`,
+          };
+          handleSavePayment(newPayment);
+        }}
       />
 
       <PropiedadDetailModal

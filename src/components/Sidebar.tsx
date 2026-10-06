@@ -158,10 +158,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <path d="M8 32 C 6 25, 11 18, 20 15 C 18 21, 20 25, 16 29 C 13 32, 9 33, 8 32 Z" fill="#65a30d" opacity="0.8" />
             </svg>
           </div>
-          <p className="font-script text-xl leading-snug text-amber-200/95 tracking-wide">
-            Juntos <br />
-            hacemos <br />
-            realidad tus sueños
+          <p className="font-serif-brand text-xs italic leading-relaxed text-amber-200/95 tracking-wide px-1">
+            "Crea tu origen y construye tu futuro..."
           </p>
         </div>
       </div>

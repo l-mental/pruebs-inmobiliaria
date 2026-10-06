@@ -46,8 +46,8 @@ export const ContratoModal: React.FC<ContratoModalProps> = ({
         </div>
 
         {/* Printable Document Paper */}
-        <div className="p-8 overflow-y-auto bg-slate-50 text-slate-800 text-xs font-serif leading-relaxed">
-          <div className="max-w-2xl mx-auto bg-white p-8 shadow-sm border border-slate-200 rounded-lg space-y-6">
+        <div className="p-8 overflow-y-auto bg-slate-50 text-slate-800 text-sm font-serif leading-relaxed">
+          <div id="printable-contract" className="max-w-2xl mx-auto bg-white p-8 shadow-sm border border-slate-200 rounded-lg space-y-6">
             {/* Header Document */}
             <div className="text-center pb-4 border-b-2 border-slate-900 space-y-1">
               <h1 className="text-sm font-bold tracking-wider uppercase font-sans text-slate-900">
