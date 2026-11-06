@@ -18,7 +18,6 @@ import { RegistrarPagoModal } from './components/modals/RegistrarPagoModal';
 import { ContratoModal } from './components/modals/ContratoModal';
 import { PropiedadDetailModal } from './components/modals/PropiedadDetailModal';
 import { RegistrarPropiedadModal } from './components/modals/RegistrarPropiedadModal';
-import { RegistrarClienteModal } from './components/modals/RegistrarClienteModal';
 import { PlanPagosModal } from './components/modals/PlanPagosModal';
 
 import { 
@@ -54,12 +53,14 @@ export default function App() {
   const [isNewSaleModalOpen, setIsNewSaleModalOpen] = useState(false);
   const [isNewPaymentModalOpen, setIsNewPaymentModalOpen] = useState(false);
   const [isNewPropertyModalOpen, setIsNewPropertyModalOpen] = useState(false);
-  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [contractSale, setContractSale] = useState<Sale | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [paymentPlanClient, setPaymentPlanClient] = useState<Client | null>(null);
   const [paymentPlanSale, setPaymentPlanSale] = useState<Sale | null>(null);
   const [lotDataForSale, setLotDataForSale] = useState<{
+    clientName?: string;
+    clientCI?: string;
+    clientPhone?: string;
     lotNumber: string;
     urbanizationName: string;
     priceBs: number;
@@ -81,21 +82,43 @@ export default function App() {
       )
     );
 
-    // If client is new, create client entry
-    if (!clients.some(c => c.ci === newSale.clientCI)) {
-      const newClient: Client = {
-        id: newSale.clientId,
-        name: newSale.clientName,
-        ci: newSale.clientCI,
-        phone: newSale.clientPhone,
-        email: `${newSale.clientName.toLowerCase().replace(/\s+/g, '.')}@email.com`,
-        address: 'Av. Circunvalación #104, Cochabamba',
-        purchasedLots: [`${newSale.urbanization} - ${newSale.lot}`],
-        totalInvested: newSale.amount,
-        status: 'Activo',
-      };
-      setClients(prev => [newClient, ...prev]);
-    }
+    // Auto-sync client record: create or update purchased lots & investment
+    setClients(prev => {
+      const exists = prev.some(c => c.ci === newSale.clientCI || c.name.toLowerCase() === newSale.clientName.toLowerCase());
+      const lotEntry = `${newSale.urbanization} - ${newSale.lot}`;
+      if (exists) {
+        return prev.map(c => {
+          if (c.ci === newSale.clientCI || c.name.toLowerCase() === newSale.clientName.toLowerCase()) {
+            const currentLots = c.purchasedLots || [];
+            return {
+              ...c,
+              phone: newSale.clientPhone || c.phone,
+              purchasedLots: currentLots.includes(lotEntry) ? currentLots : [...currentLots, lotEntry],
+              totalInvested: (c.totalInvested || 0) + newSale.amount,
+            };
+          }
+          return c;
+        });
+      } else {
+        const emailSlug = newSale.clientName.toLowerCase().replace(/[^a-z0-9]/g, '.');
+        const newClient: Client = {
+          id: newSale.clientId || `C-${Date.now().toString().slice(-4)}`,
+          name: newSale.clientName,
+          ci: newSale.clientCI,
+          phone: newSale.clientPhone || '71234567',
+          email: `${emailSlug}@email.com`,
+          address: 'Av. Circunvalación #104, Cochabamba',
+          birthDate: '1988-03-24',
+          occupation: 'Cliente / Propietario',
+          civilStatus: 'Casado(a)',
+          purchasedLots: [lotEntry],
+          totalInvested: newSale.amount,
+          status: 'Activo',
+          documents: []
+        };
+        return [newClient, ...prev];
+      }
+    });
 
     // Auto-create initial payment if any
     if (newSale.totalPaid > 0) {
@@ -180,10 +203,114 @@ export default function App() {
 
   const handleSaveProperty = (newProperty: Property) => {
     setProperties(prev => [newProperty, ...prev]);
+
+    // Automáticamente registrar a los propietarios como Clientes del sistema
+    if (newProperty.ownerNames && newProperty.ownerNames.length > 0) {
+      newProperty.ownerNames.forEach((ownerName, idx) => {
+        const cleanName = ownerName.trim();
+        if (!cleanName) return;
+
+        setClients(prevClients => {
+          const exists = prevClients.some(c => c.name.toLowerCase() === cleanName.toLowerCase());
+          const lotEntry = `${newProperty.urbanizationName} - ${newProperty.propertyName || newProperty.title}`;
+          const amountInBs = newProperty.currency === '$us.' ? Math.round(newProperty.price * 6.96) : newProperty.price;
+
+          if (exists) {
+            return prevClients.map(c => {
+              if (c.name.toLowerCase() === cleanName.toLowerCase()) {
+                const currentLots = c.purchasedLots || [];
+                return {
+                  ...c,
+                  purchasedLots: currentLots.includes(lotEntry) ? currentLots : [...currentLots, lotEntry],
+                  totalInvested: (c.totalInvested || 0) + amountInBs,
+                };
+              }
+              return c;
+            });
+          }
+
+          const fallbackCI = newProperty.ownerCI 
+            ? (idx === 0 ? newProperty.ownerCI : `${Math.floor(2000000 + Math.random() * 7000000)} CB`) 
+            : `${Math.floor(2000000 + Math.random() * 7000000)} CB`;
+          const fallbackPhone = newProperty.ownerPhone || '71234567';
+          const emailSlug = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '.');
+
+          const newClient: Client = {
+            id: `C-${Date.now().toString().slice(-4)}${idx}`,
+            name: cleanName,
+            ci: fallbackCI,
+            phone: fallbackPhone,
+            email: `${emailSlug}@email.com`,
+            address: newProperty.location || `${newProperty.city || 'Cochabamba'}, Bolivia`,
+            birthDate: '1984-06-15',
+            occupation: 'Propietario / Inversionista',
+            civilStatus: 'Casado(a)',
+            status: 'Activo',
+            purchasedLots: [lotEntry],
+            totalInvested: amountInBs,
+            documents: []
+          };
+
+          return [newClient, ...prevClients];
+        });
+      });
+    }
   };
 
-  const handleSaveClient = (newClient: Client) => {
-    setClients(prev => [newClient, ...prev]);
+  const handleOpenSaleForProperty = (prop: Property) => {
+    const primaryOwner = prop.ownerNames && prop.ownerNames.length > 0 ? prop.ownerNames[0].trim() : '';
+    const lotLabel = `${prop.urbanizationName || 'Urbanización'} - ${prop.propertyName || prop.title}`;
+    const totalBs = prop.currency === '$us.' ? Math.round(prop.price * 6.96) : prop.price;
+
+    let targetCI = prop.ownerCI || `${Math.floor(3000000 + Math.random() * 6000000)} CB`;
+    let targetPhone = prop.ownerPhone || '71234567';
+
+    // Asegurar que el propietario aparezca en automático en Clientes
+    if (primaryOwner) {
+      setClients(prev => {
+        const existing = prev.find(c => c.name.toLowerCase() === primaryOwner.toLowerCase());
+        if (existing) {
+          targetCI = existing.ci;
+          targetPhone = existing.phone;
+          const currentLots = existing.purchasedLots || [];
+          return prev.map(c => c.id === existing.id ? {
+            ...c,
+            purchasedLots: currentLots.includes(lotLabel) ? currentLots : [...currentLots, lotLabel],
+          } : c);
+        }
+
+        const emailSlug = primaryOwner.toLowerCase().replace(/[^a-z0-9]/g, '.');
+        const autoClient: Client = {
+          id: `C-${Date.now().toString().slice(-4)}`,
+          name: primaryOwner,
+          ci: targetCI,
+          phone: targetPhone,
+          email: `${emailSlug}@email.com`,
+          address: prop.location || 'Cochabamba, Bolivia',
+          birthDate: '1985-05-10',
+          occupation: 'Propietario / Titular',
+          civilStatus: 'Casado(a)',
+          status: 'Activo',
+          purchasedLots: [lotLabel],
+          totalInvested: totalBs,
+          documents: []
+        };
+        return [autoClient, ...prev];
+      });
+    }
+
+    setLotDataForSale({
+      clientName: primaryOwner,
+      clientCI: targetCI,
+      clientPhone: targetPhone,
+      lotNumber: prop.propertyName || prop.title,
+      urbanizationName: prop.urbanizationName || 'Villa Bonita',
+      priceBs: totalBs,
+      surface: prop.area,
+      latitude: -17.543740,
+      longitude: -65.986330,
+    });
+    setIsNewSaleModalOpen(true);
   };
 
   const handleUpdateClient = (updatedClient: Client) => {
@@ -282,13 +409,13 @@ export default function App() {
               properties={properties}
               onSelectProperty={setSelectedProperty}
               onOpenNewProperty={() => setIsNewPropertyModalOpen(true)}
+              onSellProperty={handleOpenSaleForProperty}
             />
           )}
 
           {currentTab === 'clientes' && (
             <ClientesView
               clients={clients}
-              onOpenNewClient={() => setIsNewClientModalOpen(true)}
               onUpdateClient={handleUpdateClient}
               onOpenPaymentPlan={(client) => {
                 setPaymentPlanSale(null);
@@ -300,12 +427,6 @@ export default function App() {
       </div>
 
       {/* Modals */}
-      <RegistrarClienteModal
-        isOpen={isNewClientModalOpen}
-        onClose={() => setIsNewClientModalOpen(false)}
-        onSaveClient={handleSaveClient}
-      />
-
       <RegistrarVentaModal
         isOpen={isNewSaleModalOpen}
         onClose={() => {
@@ -313,6 +434,8 @@ export default function App() {
           setLotDataForSale(undefined);
         }}
         urbanizations={urbanizations}
+        clients={clients}
+        properties={properties}
         onSaveSale={handleSaveSale}
         initialLotData={lotDataForSale}
       />
@@ -372,9 +495,13 @@ export default function App() {
         isOpen={!!selectedProperty}
         onClose={() => setSelectedProperty(null)}
         property={selectedProperty}
-        onOpenSaleModal={() => {
-          setLotDataForSale(undefined);
-          setIsNewSaleModalOpen(true);
+        onOpenSaleModal={(prop) => {
+          if (prop) {
+            handleOpenSaleForProperty(prop);
+          } else {
+            setLotDataForSale(undefined);
+            setIsNewSaleModalOpen(true);
+          }
         }}
       />
     </div>

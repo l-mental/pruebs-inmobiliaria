@@ -28,6 +28,8 @@ export const RegistrarPropiedadModal: React.FC<RegistrarPropiedadModalProps> = (
   const [propertyName, setPropertyName] = useState('');
   const [ownerNameInput, setOwnerNameInput] = useState('');
   const [ownerNames, setOwnerNames] = useState<string[]>(['Juan Carlos Morales']);
+  const [ownerCI, setOwnerCI] = useState('');
+  const [ownerPhone, setOwnerPhone] = useState('');
   const [urbanizationName, setUrbanizationName] = useState(urbanizations[0]?.name || 'Villa Bonita');
   const [type, setType] = useState<PropertyType>('Casa');
   const [operation, setOperation] = useState<PropertyOperation>('Venta');
@@ -95,6 +97,8 @@ export const RegistrarPropiedadModal: React.FC<RegistrarPropiedadModalProps> = (
       title: finalTitle,
       propertyName: propertyName.trim() || finalTitle,
       ownerNames: finalOwners.length > 0 ? finalOwners : ['Inmobiliaria Nuevas Raíces'],
+      ownerCI: ownerCI.trim() || undefined,
+      ownerPhone: ownerPhone.trim() || undefined,
       urbanizationName: urbanizationName || 'Villa Bonita',
       type,
       operation,
@@ -247,6 +251,41 @@ export const RegistrarPropiedadModal: React.FC<RegistrarPropiedadModalProps> = (
                     Ningún nombre añadido aún. Escribe arriba y haz clic en &ldquo;+ Añadir Nombre&rdquo;.
                   </span>
                 )}
+              </div>
+
+              {/* DATOS DE CONTACTO / IDENTIFICACIÓN DEL PROPIETARIO */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-3 border-t border-emerald-200/70">
+                <div>
+                  <label className="block text-slate-800 font-extrabold mb-1 text-xs">
+                    Cédula de Identidad (CI) del Propietario (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. 4892134 CB (se autogenera si se omite)"
+                    value={ownerCI}
+                    onChange={(e) => setOwnerCI(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl font-bold text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/30 text-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-800 font-extrabold mb-1 text-xs">
+                    Teléfono / Celular del Propietario (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. 71234567"
+                    value={ownerPhone}
+                    onChange={(e) => setOwnerPhone(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl font-bold text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/30 text-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div className="p-2.5 bg-emerald-100/60 rounded-xl border border-emerald-300 text-xs text-emerald-950 font-bold flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                <span>
+                  Al registrar esta propiedad en venta, el propietario se añadirá automáticamente a la lista de Clientes con su expediente.
+                </span>
               </div>
             </div>
           </div>

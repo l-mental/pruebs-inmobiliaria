@@ -347,108 +347,108 @@ export const InteractiveMapView: React.FC<InteractiveMapViewProps> = ({
   return (
     <div
       className={`flex flex-col bg-white rounded-2xl border-2 border-slate-300 overflow-hidden shadow-md ${
-        isFullscreen ? 'fixed inset-3 z-50' : 'relative'
+        isFullscreen ? 'fixed inset-0 sm:inset-2 z-50 rounded-none sm:rounded-2xl' : 'relative'
       }`}
     >
       {/* ===================================================================== */}
       {/* TOP BAR: CAD CADASTRAL PLAN CONTROLS & COLOR MODE SWITCHER            */}
       {/* ===================================================================== */}
-      <div className="bg-[#0f172a] text-white px-4 py-3 flex flex-wrap items-center justify-between gap-3 border-b border-slate-700">
+      <div className="bg-[#0f172a] text-white px-3 sm:px-4 py-2.5 sm:py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-700">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
-            <Compass className="w-5 h-5" />
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shrink-0">
+            <Compass className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase tracking-widest text-amber-300 font-bold">
-                PLANO CATASTRAL OFICIAL DEL SISTEMA (MODELO PDF CAD)
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-amber-300 font-bold truncate">
+                PLANO CATASTRAL OFICIAL DEL SISTEMA
               </span>
-              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+              <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] sm:text-[10px] font-bold shrink-0">
                 G.A.M.C.B.B.A.
               </span>
             </div>
-            <h3 className="text-sm sm:text-base font-black text-white">
+            <h3 className="text-xs sm:text-sm md:text-base font-black text-white truncate">
               {urbanization.name} &bull; <span className="text-emerald-300 font-semibold">{urbanization.location}</span>
             </h3>
           </div>
         </div>
 
         {/* Controls: Mode Toggle + Zoom + Fullscreen */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {/* CAD Mode vs Commercial Status Color Mode */}
-          <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-bold">
+          <div className="flex items-center bg-slate-800 p-0.5 sm:p-1 rounded-xl border border-slate-700 text-[11px] sm:text-xs font-bold">
             <button
               type="button"
               onClick={() => setColorMode('cad')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`px-2 sm:px-3 py-1 rounded-lg transition-all cursor-pointer ${
                 colorMode === 'cad'
                   ? 'bg-white text-slate-950 font-black shadow-xs'
                   : 'text-slate-300 hover:text-white'
               }`}
             >
-              📐 Plano Técnico PDF
+              📐 Técnico CAD
             </button>
             <button
               type="button"
               onClick={() => setColorMode('comercial')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`px-2 sm:px-3 py-1 rounded-lg transition-all cursor-pointer ${
                 colorMode === 'comercial'
                   ? 'bg-emerald-500 text-slate-950 font-black shadow-xs'
                   : 'text-slate-300 hover:text-white'
               }`}
             >
-              🟢 Semáforo Comercial
+              🟢 Comercial
             </button>
           </div>
 
           {/* Zoom Controls */}
-          <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700">
+          <div className="flex items-center gap-0.5 sm:gap-1 bg-slate-800 p-0.5 sm:p-1 rounded-xl border border-slate-700">
             <button
               type="button"
               onClick={() => setZoom(z => Math.max(0.65, +(z - 0.2).toFixed(2)))}
-              className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-200 cursor-pointer"
+              className="p-1 sm:p-1.5 hover:bg-slate-700 rounded-lg text-slate-200 cursor-pointer"
               title="Alejar plano"
             >
-              <ZoomOut className="w-4 h-4" />
+              <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
-            <span className="px-2 text-xs font-mono font-bold text-amber-300">
+            <span className="px-1.5 sm:px-2 text-[10px] sm:text-xs font-mono font-bold text-amber-300">
               {Math.round(zoom * 100)}%
             </span>
             <button
               type="button"
               onClick={() => setZoom(z => Math.min(2.6, +(z + 0.2).toFixed(2)))}
-              className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-200 cursor-pointer"
+              className="p-1 sm:p-1.5 hover:bg-slate-700 rounded-lg text-slate-200 cursor-pointer"
               title="Acercar plano"
             >
-              <ZoomIn className="w-4 h-4" />
+              <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
             <button
               type="button"
               onClick={resetView}
-              className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-200 cursor-pointer"
+              className="p-1 sm:p-1.5 hover:bg-slate-700 rounded-lg text-slate-200 cursor-pointer"
               title="Restablecer vista"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
 
           <button
             type="button"
             onClick={() => window.print()}
-            className="px-3 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] sm:text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
             title="Imprimir Plano Catastral"
           >
-            <Printer className="w-4 h-4" />
-            <span className="hidden sm:inline">Imprimir Plano</span>
+            <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Imprimir</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl border border-slate-700 cursor-pointer"
+            className="p-1.5 sm:p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl border border-slate-700 cursor-pointer"
             title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
           >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
           </button>
         </div>
       </div>
@@ -462,7 +462,7 @@ export const InteractiveMapView: React.FC<InteractiveMapViewProps> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         className={`relative w-full ${
-          isFullscreen ? 'flex-1' : 'h-[760px]'
+          isFullscreen ? 'flex-1' : 'h-[480px] sm:h-[620px] lg:h-[760px]'
         } bg-white overflow-hidden select-none ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}

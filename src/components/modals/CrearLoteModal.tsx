@@ -155,21 +155,19 @@ export const CrearLoteModal: React.FC<CrearLoteModalProps> = ({
     onClose();
   };
 
-  const testMapUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="bg-white w-full max-w-2xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh]">
         {/* Header */}
-        <div className="bg-[#072a1b] text-white p-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-amber-300">
+        <div className="bg-[#072a1b] text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 flex items-center justify-center text-amber-300 shrink-0">
               <MapPin className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold">Agregar Lote de Terreno</h2>
+              <h2 className="text-sm sm:text-base font-bold">Agregar Lote de Terreno</h2>
               <p className="text-xs text-emerald-200/80">
-                Condominio: <span className="font-semibold text-white">{currentUrb?.name}</span>
+                Urbanización: <span className="font-semibold text-white">{currentUrb?.name}</span>
               </p>
             </div>
           </div>
@@ -182,7 +180,7 @@ export const CrearLoteModal: React.FC<CrearLoteModalProps> = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
           {/* Condominio y Manzano */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -457,25 +455,26 @@ export const CrearLoteModal: React.FC<CrearLoteModalProps> = ({
           </div>
 
           {/* Latitud y Longitud GPS */}
-          <div className="pt-2 border-t border-slate-100 bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100">
+          {/* Latitud y Longitud GPS */}
+          <div className="pt-2 border-t border-slate-100 bg-emerald-50/50 p-3 sm:p-3.5 rounded-xl border border-emerald-100">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
               <div>
                 <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs">
                   <Compass className="w-4 h-4 text-emerald-800" />
-                  Geolocalización GPS (Google Maps) *
+                  Geolocalización Catastral del Terreno
                 </h3>
                 <p className="text-[11px] text-slate-500">
-                  Coordenadas exactas para ubicar este lote en Google Maps.
+                  Coordenadas para el plano catastral interno del sistema.
                 </p>
               </div>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <button
                   type="button"
                   onClick={handleUseUrbCoords}
                   className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-lg border border-slate-200 text-[11px] shadow-2xs cursor-pointer"
                 >
-                  Usar centro del condominio
+                  Usar centro urbanización
                 </button>
                 <button
                   type="button"
@@ -484,7 +483,7 @@ export const CrearLoteModal: React.FC<CrearLoteModalProps> = ({
                   className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white font-semibold rounded-lg text-[11px] flex items-center gap-1 shadow-2xs cursor-pointer"
                 >
                   <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>{isDetectingGps ? 'Detectando...' : 'Mi GPS actual'}</span>
+                  <span>{isDetectingGps ? 'Detectando...' : 'GPS actual'}</span>
                 </button>
               </div>
             </div>
@@ -521,32 +520,23 @@ export const CrearLoteModal: React.FC<CrearLoteModalProps> = ({
 
             <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-emerald-200/50">
               <span className="text-[11px] text-slate-600">
-                Punto: <span className="font-mono font-bold text-slate-800">{latitude}, {longitude}</span>
+                Punto Catastral: <span className="font-mono font-bold text-slate-800">{latitude}, {longitude}</span>
               </span>
-              <a
-                href={testMapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 hover:underline"
-              >
-                <span>Probar enlace en Google Maps</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
             </div>
           </div>
 
           {/* Botones */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+          <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer text-center"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-[#0d3f2b] hover:bg-[#072a1c] text-white font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto px-5 py-2.5 bg-[#0d3f2b] hover:bg-[#072a1c] text-white font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Check className="w-4 h-4 text-amber-300" />
               <span>Guardar Lote</span>

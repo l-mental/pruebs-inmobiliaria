@@ -19,12 +19,14 @@ interface PropiedadesViewProps {
   properties: Property[];
   onSelectProperty: (property: Property) => void;
   onOpenNewProperty?: () => void;
+  onSellProperty?: (property: Property) => void;
 }
 
 export const PropiedadesView: React.FC<PropiedadesViewProps> = ({
   properties,
   onSelectProperty,
   onOpenNewProperty,
+  onSellProperty,
 }) => {
   const [search, setSearch] = useState('');
   const [selectedType, setSelectedType] = useState<string>('Todos');
@@ -236,13 +238,25 @@ export const PropiedadesView: React.FC<PropiedadesViewProps> = ({
                   </span>
                 </div>
 
-                <button
-                  onClick={() => onSelectProperty(prop)}
-                  className="w-full py-3 px-4 rounded-xl bg-[#0d3f2b] hover:bg-[#072a1c] text-sm font-black text-white transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                >
-                  <span>Ver Ficha Técnica Completa</span>
-                  <ArrowRight className="w-4 h-4 text-amber-300" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onSelectProperty(prop)}
+                    className="flex-1 py-3 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-black text-slate-800 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <span>Ficha Técnica</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
+                  </button>
+
+                  {onSellProperty && (
+                    <button
+                      onClick={() => onSellProperty(prop)}
+                      className="flex-1 py-3 px-3 rounded-xl bg-[#0d3f2b] hover:bg-[#072a1c] text-xs font-black text-white transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Poner en Venta</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );

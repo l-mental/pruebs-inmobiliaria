@@ -6,7 +6,7 @@ interface PropiedadDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   property: Property | null;
-  onOpenSaleModal?: () => void;
+  onOpenSaleModal?: (property: Property) => void;
 }
 
 export const PropiedadDetailModal: React.FC<PropiedadDetailModalProps> = ({
@@ -155,12 +155,13 @@ export const PropiedadDetailModal: React.FC<PropiedadDetailModalProps> = ({
             {onOpenSaleModal && (
               <button
                 onClick={() => {
+                  const targetProperty = property;
                   onClose();
-                  onOpenSaleModal();
+                  onOpenSaleModal(targetProperty);
                 }}
                 className="flex-1 py-3 px-4 bg-[#0d3f2b] hover:bg-[#082b1d] text-white font-black rounded-xl shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Iniciar Venta</span>
+                <span>Poner en Venta</span>
               </button>
             )}
           </div>

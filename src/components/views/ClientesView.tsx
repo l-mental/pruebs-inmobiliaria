@@ -26,14 +26,12 @@ import { Client, ClientDocument } from '../../types';
 
 interface ClientesViewProps {
   clients: Client[];
-  onOpenNewClient?: () => void;
   onUpdateClient?: (client: Client) => void;
   onOpenPaymentPlan?: (client: Client) => void;
 }
 
 export const ClientesView: React.FC<ClientesViewProps> = ({
   clients,
-  onOpenNewClient,
   onUpdateClient,
   onOpenPaymentPlan,
 }) => {
@@ -175,13 +173,14 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={onOpenNewClient}
-            className="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-[#072a1b] text-sm font-black rounded-2xl shadow-lg transition-all flex items-center gap-2.5 cursor-pointer"
-          >
-            <Plus className="w-5 h-5 stroke-[2.5]" />
-            <span>+ Nuevo Cliente</span>
-          </button>
+          <div className="px-5 py-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-right">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-300 block">
+              Sincronización Automática
+            </span>
+            <p className="text-xs font-bold text-white">
+              Los clientes se registran al poner en venta propiedades
+            </p>
+          </div>
         </div>
       </div>
 

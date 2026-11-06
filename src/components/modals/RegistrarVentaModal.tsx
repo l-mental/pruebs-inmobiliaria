@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { X, FilePlus, Check, MapPin, Sparkles, Compass } from 'lucide-react';
-import { Sale, Urbanization, PaymentModality } from '../../types';
+import { Sale, Urbanization, PaymentModality, Client, Property } from '../../types';
 
 interface RegistrarVentaModalProps {
   isOpen: boolean;
   onClose: () => void;
   urbanizations: Urbanization[];
   onSaveSale: (sale: Sale) => void;
+  clients?: Client[];
+  properties?: Property[];
   initialLotData?: { 
+    clientName?: string;
+    clientCI?: string;
+    clientPhone?: string;
     lotNumber: string; 
     urbanizationName: string; 
     priceBs: number; 
@@ -22,11 +27,13 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
   onClose,
   urbanizations,
   onSaveSale,
+  clients = [],
+  properties = [],
   initialLotData,
 }) => {
-  const [clientName, setClientName] = useState('');
-  const [clientCI, setClientCI] = useState('');
-  const [clientPhone, setClientPhone] = useState('');
+  const [clientName, setClientName] = useState(initialLotData?.clientName || '');
+  const [clientCI, setClientCI] = useState(initialLotData?.clientCI || '');
+  const [clientPhone, setClientPhone] = useState(initialLotData?.clientPhone || '');
   const [urbanization, setUrbanization] = useState(initialLotData?.urbanizationName || urbanizations[0]?.name || 'Villa Bonita');
   const [lot, setLot] = useState(initialLotData?.lotNumber || 'Lote 15');
   const [block, setBlock] = useState('Manzano 3');
@@ -43,6 +50,9 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
 
   useEffect(() => {
     if (initialLotData) {
+      if (initialLotData.clientName) setClientName(initialLotData.clientName);
+      if (initialLotData.clientCI) setClientCI(initialLotData.clientCI);
+      if (initialLotData.clientPhone) setClientPhone(initialLotData.clientPhone);
       if (initialLotData.urbanizationName) setUrbanization(initialLotData.urbanizationName);
       if (initialLotData.lotNumber) setLot(initialLotData.lotNumber);
       if (initialLotData.priceBs) setAmount(initialLotData.priceBs);
@@ -146,10 +156,105 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
 
         {/* Modal Body */}
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-xs">
+          {/* AUTOCOMPLETAR DATOS DEL PROPIETARIO / CLIENTE */}
+          <div className="p-3 bg-emerald-50/70 rounded-xl border border-emerald-200/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-extrabold text-emerald-950 flex items-center gap-1.5 text-xs">
+                <span>⚡ Carga Automática de Datos de Propietario / Cliente:</span>
+              </span>
+              <span className="text-[10.5px] text-emerald-700 font-bold">
+                (Datos sincronizados automáticamente)
+              </span>
+            </div>
+
+            {clientName && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 border border-emerald-300 rounded-lg text-emerald-900 font-extrabold text-[11px]">
+                <Check className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
+                <span>Datos cargados en automático para: <strong>{clientName}</strong> {clientCI ? `(CI: ${clientCI})` : ''}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {clients.length > 0 && (
+                <div>
+                  <label className="block text-[10.5px] font-bold text-slate-700 mb-0.5">
+                    Seleccionar Propietario / Titular Registrado:
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      const selected = clients.find(c => c.id === e.target.value);
+                      if (selected) {
+                        setClientName(selected.name);
+                        setClientCI(selected.ci);
+                        setClientPhone(selected.phone);
+                        if (selected.purchasedLots && selected.purchasedLots.length > 0) {
+                          const parts = selected.purchasedLots[0].split(' - ');
+                          if (parts[0]) setUrbanization(parts[0]);
+                          if (parts[1]) setLot(parts[1]);
+                        }
+                      }
+                    }}
+                    defaultValue=""
+                    className="w-full px-3 py-1.5 bg-white border border-emerald-300 rounded-lg font-bold text-slate-800 text-xs cursor-pointer"
+                  >
+                    <option value="" disabled>-- Elegir Propietario para autocompletar --</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} (CI: {c.ci})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {properties.length > 0 && (
+                <div>
+                  <label className="block text-[10.5px] font-bold text-slate-700 mb-0.5">
+                    O Cargar desde Propiedad en Venta:
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      const selected = properties.find(p => p.id === e.target.value);
+                      if (selected) {
+                        if (selected.ownerNames && selected.ownerNames.length > 0) {
+                          const firstOwner = selected.ownerNames[0];
+                          setClientName(firstOwner);
+                          const matchingClient = clients.find(c => c.name.toLowerCase() === firstOwner.toLowerCase());
+                          if (matchingClient) {
+                            setClientCI(matchingClient.ci);
+                            setClientPhone(matchingClient.phone);
+                          } else {
+                            if (selected.ownerCI) setClientCI(selected.ownerCI);
+                            if (selected.ownerPhone) setClientPhone(selected.ownerPhone);
+                          }
+                        }
+                        if (selected.urbanizationName) setUrbanization(selected.urbanizationName);
+                        if (selected.propertyName || selected.title) setLot(selected.propertyName || selected.title);
+                        if (selected.price) {
+                          setAmount(selected.currency === '$us.' ? Math.round(selected.price * 6.96) : selected.price);
+                        }
+                        if (selected.area) setSurface(`${selected.area} m²`);
+                      }
+                    }}
+                    defaultValue=""
+                    className="w-full px-3 py-1.5 bg-white border border-emerald-300 rounded-lg font-bold text-slate-800 text-xs cursor-pointer"
+                  >
+                    <option value="" disabled>-- Cargar Propiedad en Venta --</option>
+                    {properties.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.propertyName || p.title} ({p.ownerNames?.join(', ') || 'Sin propietario'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Cliente */}
           <div>
             <h3 className="font-bold text-slate-800 uppercase tracking-wider mb-2">
-              Datos del Comprador
+              Datos del Propietario / Comprador
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>

@@ -125,6 +125,9 @@ export interface Lot {
   streetName?: string; // Nombre de la avenida o calle frente al lote
   cornerStreets?: string; // e.g. "Av. Principal y Calle 2" para lotes en esquina
   hasAvenueAccess?: boolean; // Indica si tiene salida directa a la avenida
+  cadastralCode?: string;
+  observations?: string;
+  zone?: string;
 }
 
 export interface Urbanization {
@@ -135,9 +138,13 @@ export interface Urbanization {
   totalLots: number;
   soldLots: number;
   availableLots: number;
+  reservedLots?: number;
   image: string;
+  images?: string[];
   pricePerM2: number;
+  basePricePerM2?: number;
   amenities: string[];
+  features?: string[];
   description: string;
   latitude?: number;
   longitude?: number;
@@ -145,6 +152,7 @@ export interface Urbanization {
   internalStreets?: string[]; // Vías internas y secundarias
   avenueLotsCount?: number;
   cornerLotsCount?: number;
+  manzanosCount?: number;
 }
 
 export interface Property {
@@ -152,6 +160,8 @@ export interface Property {
   title: string;
   propertyName?: string; // Nombre específico de la propiedad / inmueble
   ownerNames?: string[]; // Nombres de propietarios / titulares añadidos
+  ownerCI?: string; // Cédula de identidad del propietario
+  ownerPhone?: string; // Teléfono del propietario
   urbanizationName?: string; // Nombre de la urbanización asociada
   type: PropertyType;
   operation: PropertyOperation;
