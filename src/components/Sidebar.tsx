@@ -3,9 +3,11 @@ import {
   Home, 
   Users, 
   FileText, 
-  LogOut 
+  LogOut,
+  UserCog,
+  Lock
 } from 'lucide-react';
-import { NavTab } from '../types';
+import { NavTab, SystemUserRole, UserPermissions } from '../types';
 
 interface SidebarProps {
   currentTab: NavTab;
@@ -13,11 +15,14 @@ interface SidebarProps {
   onLogout?: () => void;
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
+  permissions: UserPermissions;
+  userRole: SystemUserRole;
 }
 
 interface NavItem {
   id: NavTab;
   label: string;
+  requiredPerm?: keyof UserPermissions;
   renderIcon: (isActive: boolean) => React.ReactNode;
 }
 
@@ -33,10 +38,10 @@ const NAV_ITEMS: NavItem[] = [
   },
   { 
     id: 'terrenos', 
-    label: 'Terrenos', 
+    label: 'Terrenos',
+    requiredPerm: 'viewTerrenos',
     renderIcon: () => (
       <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-        {/* Folded map with location pin icon matching image.png */}
         <svg viewBox="0 0 24 24" className="w-5 h-5 drop-shadow-xs" fill="none">
           <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z" stroke="#4ade80" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" fill="#15803d" fillOpacity="0.4" />
           <path d="M9 3v15M15 6v15" stroke="#86efac" strokeWidth="1.5" strokeLinecap="round" />
@@ -47,44 +52,57 @@ const NAV_ITEMS: NavItem[] = [
   },
   { 
     id: 'propiedades', 
-    label: 'Propiedades', 
-    renderIcon: () => (
+    label: 'Propiedades',
+    requiredPerm: 'viewPropiedades',
+    renderIcon: (isActive) => (
       <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
         <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 20v-9.5z" stroke="#f1f5f9" />
-          <path d="M9 21.5V13h6v8.5" stroke="#f1f5f9" />
-          <path d="M17 5v2.5" stroke="#f1f5f9" />
+          <path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 20v-9.5z" stroke={isActive ? '#0f172a' : '#f1f5f9'} />
+          <path d="M9 21.5V13h6v8.5" stroke={isActive ? '#0f172a' : '#f1f5f9'} />
+          <path d="M17 5v2.5" stroke={isActive ? '#0f172a' : '#f1f5f9'} />
         </svg>
       </div>
     )
   },
   { 
     id: 'clientes', 
-    label: 'Mis Clientes', 
-    renderIcon: () => (
+    label: 'Mis Clientes',
+    requiredPerm: 'viewClientes',
+    renderIcon: (isActive) => (
       <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-        <Users className="w-5 h-5 text-emerald-200" />
+        <Users className={`w-5 h-5 ${isActive ? 'text-slate-900' : 'text-emerald-200'}`} />
       </div>
     )
   },
   { 
     id: 'ventas', 
-    label: 'Mis Ventas', 
-    renderIcon: () => (
+    label: 'Mis Ventas',
+    requiredPerm: 'viewVentas',
+    renderIcon: (isActive) => (
       <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-        <FileText className="w-5 h-5 text-emerald-200" />
+        <FileText className={`w-5 h-5 ${isActive ? 'text-slate-900' : 'text-emerald-200'}`} />
       </div>
     )
   },
   { 
     id: 'pagos', 
-    label: 'Mis Pagos', 
+    label: 'Mis Pagos',
+    requiredPerm: 'viewPagos',
     renderIcon: () => (
       <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-        {/* Golden dollar coin badge matching image.png */}
         <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border border-amber-200 flex items-center justify-center shadow-xs">
           <span className="text-[11px] font-extrabold text-slate-900 leading-none">$</span>
         </div>
+      </div>
+    )
+  },
+  {
+    id: 'usuarios',
+    label: 'Usuarios',
+    requiredPerm: 'manageUsers',
+    renderIcon: (isActive) => (
+      <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+        <UserCog className={`w-5 h-5 ${isActive ? 'text-slate-900' : 'text-amber-300'}`} />
       </div>
     )
   },
@@ -96,7 +114,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   isMobileOpen,
   onCloseMobile,
+  permissions,
+  userRole,
 }) => {
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => !item.requiredPerm || permissions[item.requiredPerm]
+  );
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -112,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }`}>
       {/* Navigation List */}
       <nav className="py-4 px-2 space-y-1.5">
-        {NAV_ITEMS.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = currentTab === item.id;
           return (
             <button
@@ -133,6 +157,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
 
+        {userRole === 'employee' && (
+          <div className="mx-1.5 mt-3 p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-700/50 text-[11px] text-emerald-200/90 space-y-1">
+            <div className="flex items-center gap-1.5 font-extrabold text-amber-300">
+              <Lock className="w-3.5 h-3.5 shrink-0" />
+              <span>Uso Limitado</span>
+            </div>
+            <p className="leading-snug text-[10px] text-emerald-200/80">
+              Cuenta de empleado con acceso restringido por el administrador.
+            </p>
+          </div>
+        )}
+
         {/* Cerrar sesión option */}
         <div className="pt-3 mt-3 border-t border-emerald-900/50">
           <button
@@ -150,7 +186,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Bottom decorative slogan with golden leaves */}
       <div className="p-4 pt-2">
         <div className="relative pt-3 pb-1 border-t border-emerald-800/40 text-center">
-          {/* Stylized organic leaf icon */}
           <div className="w-9 h-9 mx-auto mb-1 text-emerald-400/90">
             <svg viewBox="0 0 40 40" fill="currentColor" className="w-full h-full drop-shadow">
               <path d="M12 28 C 10 20, 16 10, 28 6 C 26 14, 28 20, 22 25 C 18 28, 14 29, 12 28 Z" fill="#84cc16" opacity="0.9" />
@@ -159,7 +194,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </svg>
           </div>
           <p className="font-serif-brand text-xs italic leading-relaxed text-amber-200/95 tracking-wide px-1">
-            "Crea tu origen y construye tu futuro..."
+            &ldquo;Crea tu origen y construye tu futuro...&rdquo;
           </p>
         </div>
       </div>

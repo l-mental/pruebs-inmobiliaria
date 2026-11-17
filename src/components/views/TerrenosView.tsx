@@ -43,6 +43,8 @@ interface TerrenosViewProps {
   onUpdateUrbanization?: (urb: Urbanization) => void;
   onAddLot: (lot: Lot) => void;
   onUpdateLot?: (lot: Lot) => void;
+  canManageUrbanizations?: boolean;
+  canCreateSales?: boolean;
 }
 
 export const TerrenosView: React.FC<TerrenosViewProps> = ({
@@ -54,6 +56,8 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
   onUpdateUrbanization,
   onAddLot,
   onUpdateLot,
+  canManageUrbanizations = true,
+  canCreateSales = true,
 }) => {
   const [selectedUrbId, setSelectedUrbId] = useState<string>(urbanizations[0]?.id || 'URB-01');
   const [selectedBlock, setSelectedBlock] = useState<string>('Todos');
@@ -480,31 +484,33 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
             </select>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-            <button
-              onClick={() => setIsNewCondoOpen(true)}
-              className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-white hover:bg-emerald-50/70 text-[#0e3d2b] border border-emerald-700/30 hover:border-emerald-700/60 text-xs font-bold rounded-xl shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer active:scale-98 whitespace-nowrap"
-            >
-              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700 shrink-0" />
-              <span>+ Urbanización</span>
-            </button>
+          {canManageUrbanizations && (
+            <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+              <button
+                onClick={() => setIsNewCondoOpen(true)}
+                className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-white hover:bg-emerald-50/70 text-[#0e3d2b] border border-emerald-700/30 hover:border-emerald-700/60 text-xs font-bold rounded-xl shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer active:scale-98 whitespace-nowrap"
+              >
+                <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700 shrink-0" />
+                <span>+ Urbanización</span>
+              </button>
 
-            <button
-              onClick={() => setIsNewManzanoOpen(true)}
-              className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-50/90 hover:bg-emerald-100/90 text-emerald-950 border border-emerald-200 text-xs font-bold rounded-xl shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 whitespace-nowrap"
-            >
-              <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-800 shrink-0" />
-              <span>+ Manzano</span>
-            </button>
+              <button
+                onClick={() => setIsNewManzanoOpen(true)}
+                className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-50/90 hover:bg-emerald-100/90 text-emerald-950 border border-emerald-200 text-xs font-bold rounded-xl shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 whitespace-nowrap"
+              >
+                <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-800 shrink-0" />
+                <span>+ Manzano</span>
+              </button>
 
-            <button
-              onClick={() => setIsNewLotOpen(true)}
-              className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-[#0e3d2b] hover:bg-[#07241a] text-white text-xs font-black rounded-xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer active:scale-98 whitespace-nowrap"
-            >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 stroke-[3] shrink-0" />
-              <span>+ Terreno</span>
-            </button>
-          </div>
+              <button
+                onClick={() => setIsNewLotOpen(true)}
+                className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-[#0e3d2b] hover:bg-[#07241a] text-white text-xs font-black rounded-xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer active:scale-98 whitespace-nowrap"
+              >
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 stroke-[3] shrink-0" />
+                <span>+ Terreno</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1282,14 +1288,20 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                                 Valor estimado (T.C. {exchangeRate.toFixed(2)}): <strong className="text-slate-900 font-black">$us. {mzaEditPriceUsd.toLocaleString('es-BO')}</strong> <span className="text-slate-400">&bull;</span> <strong className="text-emerald-800">Bs. {mzaEditPriceBs.toLocaleString('es-BO')}</strong>
                               </div>
                             )}
-                            <button
-                              type="button"
-                              onClick={handleSaveMzaLotDetails}
-                              className="px-5 py-2 bg-[#0e3d2b] hover:bg-[#07241a] text-white rounded-xl text-xs font-black transition-all shadow-xs hover:shadow-md active:scale-98 cursor-pointer flex items-center justify-center gap-1.5"
-                            >
-                              <Check className="w-4 h-4 text-amber-300 stroke-[3]" />
-                              <span>Guardar Detalles Lote</span>
-                            </button>
+                            {canManageUrbanizations ? (
+                              <button
+                                type="button"
+                                onClick={handleSaveMzaLotDetails}
+                                className="px-5 py-2 bg-[#0e3d2b] hover:bg-[#07241a] text-white rounded-xl text-xs font-black transition-all shadow-xs hover:shadow-md active:scale-98 cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <Check className="w-4 h-4 text-amber-300 stroke-[3]" />
+                                <span>Guardar Detalles Lote</span>
+                              </button>
+                            ) : (
+                              <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
+                                Solo consulta (edición exclusiva de Administrador)
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1303,7 +1315,7 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                   selectedLot={selectedLot}
                   onSelectLot={(lot) => setSelectedLotId(lot.id)}
                   onSelectForSale={onSelectLotForSale}
-                  onUpdateUrbanization={onUpdateUrbanization}
+                  onUpdateUrbanization={canManageUrbanizations ? onUpdateUrbanization : undefined}
                   exchangeRate={exchangeRate}
                 />
               ) : viewMode === 'plan' ? (
@@ -1924,7 +1936,7 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
 
               {/* Botones de Acción */}
               <div className="space-y-2 pt-1 border-t border-slate-100">
-                {selectedLot.status === 'Disponible' ? (
+                {selectedLot.status === 'Disponible' && canCreateSales ? (
                   <button
                     type="button"
                     onClick={() => onSelectLotForSale(selectedLot, currentUrb)}
@@ -1933,7 +1945,7 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                     <ShoppingBag className="w-4 h-4 text-amber-300" />
                     <span>Registrar Venta de {selectedLot.lotNumber}</span>
                   </button>
-                ) : selectedLot.status === 'En Moratoria' ? (
+                ) : selectedLot.status === 'En Moratoria' && canManageUrbanizations ? (
                   <button
                     type="button"
                     onClick={() => handleRevertLot(selectedLot)}
@@ -1993,7 +2005,7 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
               <span>Ficha</span>
             </button>
 
-            {selectedLot.status === 'Disponible' && (
+            {selectedLot.status === 'Disponible' && canCreateSales && (
               <button
                 type="button"
                 onClick={() => onSelectLotForSale(selectedLot, currentUrb)}

@@ -4,10 +4,38 @@ export type NavTab =
   | 'propiedades'
   | 'clientes'
   | 'ventas'
-  | 'pagos';
+  | 'pagos'
+  | 'usuarios';
 
 export type TabType = NavTab;
 export type UserRole = 'admin' | 'seller';
+export type SystemUserRole = 'admin' | 'employee';
+
+export interface UserPermissions {
+  viewTerrenos: boolean;
+  manageUrbanizations: boolean;
+  viewPropiedades: boolean;
+  manageProperties: boolean;
+  viewClientes: boolean;
+  viewVentas: boolean;
+  createSales: boolean;
+  viewPagos: boolean;
+  createPayments: boolean;
+  manageExchangeRate: boolean;
+  manageUsers: boolean;
+}
+
+export interface SystemUser {
+  id: string;
+  fullName: string;
+  username: string;
+  password: string;
+  role: SystemUserRole;
+  position: string;
+  active: boolean;
+  createdAt: string;
+  permissions: UserPermissions;
+}
 
 export type PaymentModality = 'Contado' | 'Crédito';
 export type SaleStatus = 'Concretada' | 'En proceso' | 'Cancelada' | 'En moratoria';
@@ -181,6 +209,7 @@ export interface Property {
   period?: string; // e.g. "/ mes"
   status: PropertyStatus;
   image: string;
+  images?: string[];
   featured: boolean;
   description: string;
   features?: string[];

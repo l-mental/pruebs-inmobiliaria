@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Building2, Check, MapPin, Sparkles, UserPlus, Users, Trash2, Plus, Home } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Building2, Check, MapPin, UserPlus, Users, Trash2, Plus, Upload, ImagePlus, Star, Images } from 'lucide-react';
 import { Property, PropertyType, PropertyOperation, PropertyStatus, Urbanization } from '../../types';
 
 interface RegistrarPropiedadModalProps {
@@ -44,6 +44,10 @@ export const RegistrarPropiedadModal: React.FC<RegistrarPropiedadModalProps> = (
   const [period, setPeriod] = useState('');
   const [status, setStatus] = useState<PropertyStatus>('Disponible');
   const [image, setImage] = useState(PRESET_IMAGES[0].url);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [customImageUrl, setCustomImageUrl] = useState('');
+  const [isDraggingImages, setIsDraggingImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [description, setDescription] = useState('');
   const [featured, setFeatured] = useState(true);
   const [featureInput, setFeatureInput] = useState('');
@@ -78,6 +82,64 @@ export const RegistrarPropiedadModal: React.FC<RegistrarPropiedadModalProps> = (
     setFeatures(prev => prev.filter((_, i) => i !== index));
   };
 
+  const processImageFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const imageFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    if (imageFiles.length === 0) {
+      setErrorMsg('Por favor selecciona archivos de imagen válidos (JPG, PNG, WEBP).');
+      return;
+    }
+    setErrorMsg('');
+
+    const readFileAsDataUrl = (file: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Error al leer la imagen'));
+        reader.readAsDataURL(file);
+      });
+
+    try {
+      const dataUrls = (await Promise.all(imageFiles.map(readFileAsDataUrl))).filter(Boolean);
+      if (dataUrls.length === 0) return;
+
+      const shouldAutoSelectFirst =
+        uploadedImages.length === 0 && PRESET_IMAGES.some((p) => p.url === image);
+
+      setUploadedImages((prev) => {
+        const next = [...prev];
+        dataUrls.forEach((url) => {
+          if (!next.includes(url)) next.push(url);
+        });
+        return next;
+      });
+
+      if (shouldAutoSelectFirst || !image) {
+        setImage(dataUrls[0]);
+      }
+    } catch {
+      setErrorMsg('Hubo un problema al cargar una o más imágenes.');
+    }
+  };
+
+  const handleAddCustomUrl = () => {
+    const trimmed = customImageUrl.trim();
+    if (!trimmed) return;
+    setUploadedImages((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
+    setImage(trimmed);
+    setCustomImageUrl('');
+  };
+
+  const handleRemoveUploadedImage = (urlToRemove: string) => {
+    setUploadedImages((prev) => {
+      const remaining = prev.filter((u) => u !== urlToRemove);
+      if (image === urlToRemove) {
+        setImage(remaining[0] || PRESET_IMAGES[0].url);
+      }
+      return remaining;
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalTitle = title.trim() || propertyName.trim();
@@ -91,6 +153,12 @@ export const RegistrarPropiedadModal: React.FC<RegistrarPropiedadModalProps> = (
     if (ownerNameInput.trim() && !finalOwners.includes(ownerNameInput.trim())) {
       finalOwners.push(ownerNameInput.trim());
     }
+
+    const coverImage = image || uploadedImages[0] || PRESET_IMAGES[0].url;
+    const allImages = [
+      coverImage,
+      ...uploadedImages.filter((imgUrl) => imgUrl !== coverImage),
+    ];
 
     const newProperty: Property = {
       id: `PROP-${Date.now().toString().slice(-4)}`,
@@ -112,13 +180,21 @@ export const RegistrarPropiedadModal: React.FC<RegistrarPropiedadModalProps> = (
       currency,
       period: operation === 'Alquiler' ? (period || '/ mes') : undefined,
       status,
-      image: image || PRESET_IMAGES[0].url,
+      image: coverImage,
+      images: allImages,
       featured,
       features,
       description: description.trim() || `${type} en ${operation.toLowerCase()} en Urbanización ${urbanizationName}, ubicada en ${location}. Con ${area} m² de superficie total. Documentación saneada y entrega inmediata.`,
     };
 
     onSaveProperty(newProperty);
+    setTitle('');
+    setPropertyName('');
+    setLocation('');
+    setDescription('');
+    setUploadedImages([]);
+    setCustomImageUrl('');
+    setImage(PRESET_IMAGES[0].url);
     onClose();
   };
 
@@ -507,35 +583,174 @@ export const RegistrarPropiedadModal: React.FC<RegistrarPropiedadModalProps> = (
             </div>
           </div>
 
-          {/* Galería / Imagen */}
-          <div className="pt-2 border-t border-slate-100">
-            <label className="block text-slate-700 font-bold mb-2">
-              Imagen Principal de la Propiedad
-            </label>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 mb-2.5">
-              {PRESET_IMAGES.map((img, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setImage(img.url)}
-                  className={`relative rounded-xl overflow-hidden border-2 h-20 transition-all cursor-pointer ${
-                    image === img.url ? 'border-emerald-700 ring-2 ring-emerald-500/40 scale-102' : 'border-slate-200 opacity-75 hover:opacity-100'
-                  }`}
-                >
-                  <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
-                  <span className="absolute inset-x-0 bottom-0 bg-black/65 text-white text-[10px] font-bold py-0.5 text-center truncate px-1">
-                    {img.label}
-                  </span>
-                </button>
-              ))}
+          {/* Galería / Cargar Imágenes de la Propiedad */}
+          <div className="pt-2 border-t border-slate-100 space-y-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label className="font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <Images className="w-4 h-4 text-emerald-700" />
+                <span>Imágenes de la Propiedad</span>
+              </label>
+              {uploadedImages.length > 0 && (
+                <span className="text-xs font-extrabold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-200 self-start sm:self-auto">
+                  {uploadedImages.length} {uploadedImages.length === 1 ? 'imagen cargada' : 'imágenes cargadas'}
+                </span>
+              )}
             </div>
+
+            {/* Zona de carga desde dispositivo (Drag & Drop + Selector múltiple) */}
             <input
-              type="url"
-              placeholder="O pega aquí una URL personalizada de la fotografía..."
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 text-xs font-medium"
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                processImageFiles(e.target.files);
+                e.target.value = '';
+              }}
+              className="hidden"
             />
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingImages(true);
+              }}
+              onDragLeave={() => setIsDraggingImages(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDraggingImages(false);
+                processImageFiles(e.dataTransfer.files);
+              }}
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-2xl p-5 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
+                isDraggingImages
+                  ? 'border-emerald-600 bg-emerald-50 scale-[1.01]'
+                  : 'border-emerald-300 bg-emerald-50/40 hover:bg-emerald-50/80 hover:border-emerald-500'
+              }`}
+            >
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shadow-2xs">
+                <Upload className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="font-black text-slate-900 text-sm">
+                  Haz clic aquí para cargar imágenes o arrastra tus fotos
+                </p>
+                <p className="text-xs text-slate-600 font-semibold mt-0.5">
+                  Puedes subir una o varias fotografías de la propiedad (JPG, PNG, WEBP)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+                className="mt-1 px-4 py-2 bg-[#0d3f2b] hover:bg-[#072a1c] text-white text-xs font-black rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                <ImagePlus className="w-4 h-4 text-amber-300" />
+                <span>Cargar Imágenes desde Dispositivo</span>
+              </button>
+            </div>
+
+            {/* Galería de imágenes cargadas */}
+            {uploadedImages.length > 0 && (
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+                <p className="text-xs font-extrabold text-slate-700">
+                  Tus Imágenes Cargadas (haz clic en la estrella para elegir la portada principal):
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {uploadedImages.map((imgUrl, idx) => {
+                    const isMain = image === imgUrl;
+                    return (
+                      <div
+                        key={idx}
+                        className={`relative group rounded-xl overflow-hidden border-2 h-28 bg-white transition-all ${
+                          isMain
+                            ? 'border-emerald-700 ring-2 ring-emerald-500/40 shadow-md'
+                            : 'border-slate-200 hover:border-emerald-400'
+                        }`}
+                      >
+                        <img
+                          src={imgUrl}
+                          alt={`Foto propiedad ${idx + 1}`}
+                          className="w-full h-full object-cover cursor-pointer"
+                          onClick={() => setImage(imgUrl)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setImage(imgUrl)}
+                          className={`absolute top-1.5 left-1.5 px-2 py-0.5 rounded-lg text-[10px] font-black flex items-center gap-1 shadow-xs cursor-pointer transition-colors ${
+                            isMain
+                              ? 'bg-emerald-700 text-white'
+                              : 'bg-black/65 text-white hover:bg-emerald-700'
+                          }`}
+                          title="Usar como imagen principal"
+                        >
+                          <Star className={`w-3 h-3 ${isMain ? 'fill-amber-300 text-amber-300' : ''}`} />
+                          <span>{isMain ? 'Principal' : 'Elegir'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveUploadedImage(imgUrl)}
+                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-rose-600/90 hover:bg-rose-700 text-white flex items-center justify-center shadow-xs cursor-pointer transition-colors"
+                          title="Eliminar imagen"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Imágenes de ejemplo rápidas (Opcional) */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold text-slate-600">
+                O selecciona una imagen de referencia rápida:
+              </p>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+                {PRESET_IMAGES.map((img, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setImage(img.url)}
+                    className={`relative rounded-xl overflow-hidden border-2 h-20 transition-all cursor-pointer ${
+                      image === img.url ? 'border-emerald-700 ring-2 ring-emerald-500/40 scale-102' : 'border-slate-200 opacity-75 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
+                    <span className="absolute inset-x-0 bottom-0 bg-black/65 text-white text-[10px] font-bold py-0.5 text-center truncate px-1">
+                      {img.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Agregar URL externa opcional */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="url"
+                placeholder="O pega aquí una URL externa de fotografía y pulsa + Agregar URL..."
+                value={customImageUrl}
+                onChange={(e) => setCustomImageUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCustomUrl();
+                  }
+                }}
+                className="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomUrl}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-xl border border-slate-300 cursor-pointer flex items-center justify-center gap-1.5 flex-shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Agregar URL</span>
+              </button>
+            </div>
           </div>
 
           {/* Descripción */}

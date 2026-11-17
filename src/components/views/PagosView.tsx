@@ -42,6 +42,8 @@ interface PagosViewProps {
   onOpenNewPayment: () => void;
   onOpenContract: (sale: Sale) => void;
   onOpenPaymentPlan?: (sale: Sale) => void;
+  canCreatePayments?: boolean;
+  canManageExchangeRate?: boolean;
 }
 
 export const PagosView: React.FC<PagosViewProps> = ({
@@ -54,6 +56,8 @@ export const PagosView: React.FC<PagosViewProps> = ({
   onOpenNewPayment,
   onOpenContract,
   onOpenPaymentPlan,
+  canCreatePayments = true,
+  canManageExchangeRate = true,
 }) => {
   const [selectedMonth, setSelectedMonth] = useState('Mayo 2025');
   const [paymentType, setPaymentType] = useState<'cliente' | 'proveedor'>('cliente');
@@ -280,13 +284,15 @@ export const PagosView: React.FC<PagosViewProps> = ({
             </button>
           </div>
 
-          <button
-            onClick={onOpenNewPayment}
-            className="px-4 py-2.5 bg-[#0d3f2b] hover:bg-[#072a1c] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-amber-300" />
-            <span>+ Registrar Pago</span>
-          </button>
+          {canCreatePayments && (
+            <button
+              onClick={onOpenNewPayment}
+              className="px-4 py-2.5 bg-[#0d3f2b] hover:bg-[#072a1c] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-amber-300" />
+              <span>+ Registrar Pago</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -329,13 +335,14 @@ export const PagosView: React.FC<PagosViewProps> = ({
                 type="number"
                 step="0.01"
                 min="1"
+                disabled={!canManageExchangeRate}
                 value={rateInput}
                 onChange={(e) => handleRateChange(e.target.value)}
                 onBlur={() => setRateInput(safeRate.toFixed(2))}
-                className="w-20 px-2 py-1 bg-white text-slate-900 rounded-lg text-xs font-black text-center focus:outline-none focus:ring-2 focus:ring-amber-400"
-                title="Modificar tipo de cambio $us. a Bs."
+                className="w-20 px-2 py-1 bg-white text-slate-900 rounded-lg text-xs font-black text-center focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-75"
+                title={canManageExchangeRate ? 'Modificar tipo de cambio $us. a Bs.' : 'Solo el administrador puede cambiar el tipo de cambio'}
               />
-              {safeRate !== 6.96 && (
+              {canManageExchangeRate && safeRate !== 6.96 && (
                 <button
                   type="button"
                   onClick={() => handleRateChange('6.96')}
@@ -580,20 +587,22 @@ export const PagosView: React.FC<PagosViewProps> = ({
               <User className="w-3.5 h-3.5" />
               <span>Pagos de clientes</span>
             </button>
-            <button
-              onClick={() => {
-                setPaymentType('proveedor');
-                setCurrentPage(1);
-              }}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                paymentType === 'proveedor'
-                  ? 'bg-[#0d3f2b] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Truck className="w-3.5 h-3.5" />
-              <span>Pagos a proveedores</span>
-            </button>
+            {canManageExchangeRate && (
+              <button
+                onClick={() => {
+                  setPaymentType('proveedor');
+                  setCurrentPage(1);
+                }}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  paymentType === 'proveedor'
+                    ? 'bg-[#0d3f2b] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Truck className="w-3.5 h-3.5" />
+                <span>Pagos a proveedores</span>
+              </button>
+            )}
           </div>
 
           {/* Filter Bar */}

@@ -6,7 +6,7 @@ import {
   ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
-import { Property, ActivityItem, NavTab, Client, Sale, Payment, Lot, Urbanization } from '../../types';
+import { Property, ActivityItem, NavTab, Client, Sale, Payment, Lot, Urbanization, SystemUser } from '../../types';
 import { Logo } from '../Logo';
 
 interface InicioViewProps {
@@ -18,6 +18,7 @@ interface InicioViewProps {
   lots?: Lot[];
   urbanizations?: Urbanization[];
   exchangeRate?: number;
+  currentUser?: SystemUser;
   onNavigate: (tab: NavTab) => void;
   onOpenNewSale: () => void;
   onOpenNewPayment: () => void;
@@ -32,12 +33,16 @@ export const InicioView: React.FC<InicioViewProps> = ({
   lots = [],
   urbanizations = [],
   exchangeRate = 6.96,
+  currentUser,
   onNavigate,
   onOpenNewSale,
   onOpenNewPayment,
 }) => {
   const [showCommissionsModal, setShowCommissionsModal] = useState(false);
   const [showAllActivitiesModal, setShowAllActivitiesModal] = useState(false);
+  const perms = currentUser?.permissions;
+  const isEmployee = currentUser?.role === 'employee';
+  const firstName = currentUser?.fullName?.split(' ')[0] || 'Usuario';
 
   const safeRate = exchangeRate > 0 ? exchangeRate : 6.96;
   const totalPaymentsBs = payments
@@ -117,10 +122,12 @@ export const InicioView: React.FC<InicioViewProps> = ({
             {/* Content left */}
             <div className="relative z-10 max-w-lg">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                ¡Buenos días, Juan!
+                ¡Buenos días, {firstName}!
               </h1>
               <p className="text-sm sm:text-base text-slate-700 mt-1 font-medium">
-                Aquí tienes un resumen de tu actividad como vendedor.
+                {isEmployee
+                  ? 'Sesión de Empleado (Uso Limitado): consulta terrenos, clientes y ventas habilitadas.'
+                  : 'Panel de Administrador: control total del sistema inmobiliario.'}
               </p>
             </div>
 
@@ -213,61 +220,65 @@ export const InicioView: React.FC<InicioViewProps> = ({
               </div>
             </div>
 
-            {/* Card 3: MIS PAGOS */}
-            <div 
-              onClick={() => onNavigate('pagos')}
-              className="bg-[#f0f9ff] border border-sky-200/80 rounded-2xl p-4 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
-            >
-              <div>
-                <div className="w-11 h-11 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 mb-2">
-                  <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                  </svg>
+            {/* Card 3: MIS PAGOS (solo si tiene permiso) */}
+            {(!perms || perms.viewPagos) && (
+              <div 
+                onClick={() => onNavigate('pagos')}
+                className="bg-[#f0f9ff] border border-sky-200/80 rounded-2xl p-4 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
+              >
+                <div>
+                  <div className="w-11 h-11 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 mb-2">
+                    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
+                      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-sky-700">
+                    MIS PAGOS
+                  </h3>
+                  <p className="text-3xl font-extrabold text-slate-800 mt-0.5">
+                    {payments.length}
+                  </p>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Pagos registrados
+                  </p>
                 </div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-sky-700">
-                  MIS PAGOS
-                </h3>
-                <p className="text-3xl font-extrabold text-slate-800 mt-0.5">
-                  {payments.length}
-                </p>
-                <p className="text-xs text-slate-500 font-medium">
-                  Pagos registrados
-                </p>
-              </div>
-              <div className="flex justify-end mt-2">
-                <div className="w-7 h-7 rounded-full bg-[#0284c7] text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
-                  <ArrowRight className="w-3.5 h-3.5" />
+                <div className="flex justify-end mt-2">
+                  <div className="w-7 h-7 rounded-full bg-[#0284c7] text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Card 4: COMISIONES */}
-            <div 
-              onClick={() => setShowCommissionsModal(true)}
-              className="bg-[#faf5ff] border border-purple-200/80 rounded-2xl p-4 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
-            >
-              <div>
-                <div className="w-11 h-11 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-2">
-                  <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-                  </svg>
+            {/* Card 4: COMISIONES (solo administrador) */}
+            {!isEmployee && (
+              <div 
+                onClick={() => setShowCommissionsModal(true)}
+                className="bg-[#faf5ff] border border-purple-200/80 rounded-2xl p-4 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
+              >
+                <div>
+                  <div className="w-11 h-11 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-2">
+                    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-purple-700">
+                    COMISIONES
+                  </h3>
+                  <p className="text-3xl font-extrabold text-slate-800 mt-0.5">
+                    —
+                  </p>
+                  <p className="text-xs text-slate-400 italic">
+                    (Información interna)
+                  </p>
                 </div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-purple-700">
-                  COMISIONES
-                </h3>
-                <p className="text-3xl font-extrabold text-slate-800 mt-0.5">
-                  —
-                </p>
-                <p className="text-xs text-slate-400 italic">
-                  (Información interna)
-                </p>
-              </div>
-              <div className="flex justify-end mt-2">
-                <div className="w-7 h-7 rounded-full bg-[#7c3aed] text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
-                  <ArrowRight className="w-3.5 h-3.5" />
+                <div className="flex justify-end mt-2">
+                  <div className="w-7 h-7 rounded-full bg-[#7c3aed] text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* 3. "Accesos rápidos" Section */}
@@ -349,92 +360,93 @@ export const InicioView: React.FC<InicioViewProps> = ({
               </button>
 
               {/* Card 3: Nueva Venta (Orange) */}
-              <button
-                onClick={onOpenNewSale}
-                className="bg-[#ea580c] hover:bg-[#c2410c] text-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-150 text-left flex items-center justify-between group cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Plus badge */}
-                  <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                    <div className="w-11 h-11 rounded-full bg-white text-[#ea580c] flex items-center justify-center font-extrabold text-2xl shadow-sm">
-                      +
+              {(!perms || perms.createSales) && (
+                <button
+                  onClick={onOpenNewSale}
+                  className="bg-[#ea580c] hover:bg-[#c2410c] text-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-150 text-left flex items-center justify-between group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <div className="w-11 h-11 rounded-full bg-white text-[#ea580c] flex items-center justify-center font-extrabold text-2xl shadow-sm">
+                        +
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white leading-tight">
+                        Nueva Venta
+                      </h3>
+                      <p className="text-[11px] text-orange-100/90 leading-tight mt-0.5">
+                        Registra una nueva venta o reserva.
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white leading-tight">
-                      Nueva Venta
-                    </h3>
-                    <p className="text-[11px] text-orange-100/90 leading-tight mt-0.5">
-                      Registra una nueva venta o reserva.
-                    </p>
+                  <div className="w-7 h-7 rounded-full bg-white text-[#ea580c] flex items-center justify-center flex-shrink-0 ml-2 group-hover:translate-x-0.5 transition-transform shadow-xs">
+                    <ArrowRight className="w-4 h-4" />
                   </div>
-                </div>
-                <div className="w-7 h-7 rounded-full bg-white text-[#ea580c] flex items-center justify-center flex-shrink-0 ml-2 group-hover:translate-x-0.5 transition-transform shadow-xs">
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-              </button>
+                </button>
+              )}
 
               {/* Card 4: Mis Clientes (Purple) */}
-              <button
-                onClick={() => onNavigate('clientes')}
-                className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-150 text-left flex items-center justify-between group cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Two clients avatars */}
-                  <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                    <svg viewBox="0 0 64 64" className="w-12 h-12 drop-shadow-sm" fill="none">
-                      <circle cx="24" cy="22" r="10" fill="#ffffff" />
-                      <circle cx="44" cy="24" r="8" fill="#ddd6fe" />
-                      <path d="M 8 52 C 8 40 18 36 24 36 C 30 36 40 40 40 52 Z" fill="#ffffff" />
-                      <path d="M 38 52 C 38 43 45 40 50 40 C 55 40 62 43 62 52 Z" fill="#ddd6fe" />
-                    </svg>
+              {(!perms || perms.viewClientes) && (
+                <button
+                  onClick={() => onNavigate('clientes')}
+                  className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-150 text-left flex items-center justify-between group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <svg viewBox="0 0 64 64" className="w-12 h-12 drop-shadow-sm" fill="none">
+                        <circle cx="24" cy="22" r="10" fill="#ffffff" />
+                        <circle cx="44" cy="24" r="8" fill="#ddd6fe" />
+                        <path d="M 8 52 C 8 40 18 36 24 36 C 30 36 40 40 40 52 Z" fill="#ffffff" />
+                        <path d="M 38 52 C 38 43 45 40 50 40 C 55 40 62 43 62 52 Z" fill="#ddd6fe" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white leading-tight">
+                        Mis Clientes
+                      </h3>
+                      <p className="text-[11px] text-purple-100/90 leading-tight mt-0.5">
+                        Consulta y registra clientes interesados.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white leading-tight">
-                      Mis Clientes
-                    </h3>
-                    <p className="text-[11px] text-purple-100/90 leading-tight mt-0.5">
-                      Consulta y registra clientes interesados.
-                    </p>
+                  <div className="w-7 h-7 rounded-full bg-white text-[#7c3aed] flex items-center justify-center flex-shrink-0 ml-2 group-hover:translate-x-0.5 transition-transform shadow-xs">
+                    <ArrowRight className="w-4 h-4" />
                   </div>
-                </div>
-                <div className="w-7 h-7 rounded-full bg-white text-[#7c3aed] flex items-center justify-center flex-shrink-0 ml-2 group-hover:translate-x-0.5 transition-transform shadow-xs">
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-              </button>
+                </button>
+              )}
 
               {/* Card 5: Registrar Pago (Teal) */}
-              <button
-                onClick={onOpenNewPayment}
-                className="bg-[#0d9488] hover:bg-[#0f766e] text-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-150 text-left flex items-center justify-between group cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Stacked coins with dollar */}
-                  <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                    <svg viewBox="0 0 64 64" className="w-12 h-12 drop-shadow-sm" fill="none">
-                      {/* Coins stack */}
-                      <ellipse cx="32" cy="46" rx="18" ry="7" fill="#fbbf24" stroke="#d97706" strokeWidth="1.5" />
-                      <path d="M 14 46 L 14 38 A 18 7 0 0 0 50 38 L 50 46 A 18 7 0 0 1 14 46" fill="#f59e0b" />
-                      <ellipse cx="32" cy="38" rx="18" ry="7" fill="#fde047" stroke="#d97706" strokeWidth="1.5" />
-                      <path d="M 14 38 L 14 30 A 18 7 0 0 0 50 30 L 50 38 A 18 7 0 0 1 14 38" fill="#f59e0b" />
-                      <ellipse cx="32" cy="30" rx="18" ry="7" fill="#fef08a" stroke="#d97706" strokeWidth="1.5" />
-                      {/* Dollar symbol on coin face */}
-                      <text x="32" y="34" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#78350f">$</text>
-                    </svg>
+              {(!perms || perms.createPayments) && (
+                <button
+                  onClick={onOpenNewPayment}
+                  className="bg-[#0d9488] hover:bg-[#0f766e] text-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-150 text-left flex items-center justify-between group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <svg viewBox="0 0 64 64" className="w-12 h-12 drop-shadow-sm" fill="none">
+                        <ellipse cx="32" cy="46" rx="18" ry="7" fill="#fbbf24" stroke="#d97706" strokeWidth="1.5" />
+                        <path d="M 14 46 L 14 38 A 18 7 0 0 0 50 38 L 50 46 A 18 7 0 0 1 14 46" fill="#f59e0b" />
+                        <ellipse cx="32" cy="38" rx="18" ry="7" fill="#fde047" stroke="#d97706" strokeWidth="1.5" />
+                        <path d="M 14 38 L 14 30 A 18 7 0 0 0 50 30 L 50 38 A 18 7 0 0 1 14 38" fill="#f59e0b" />
+                        <ellipse cx="32" cy="30" rx="18" ry="7" fill="#fef08a" stroke="#d97706" strokeWidth="1.5" />
+                        <text x="32" y="34" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#78350f">$</text>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white leading-tight">
+                        Registrar Pago
+                      </h3>
+                      <p className="text-[11px] text-teal-100/90 leading-tight mt-0.5">
+                        Registra pagos, cuotas y cobranzas.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white leading-tight">
-                      Registrar Pago
-                    </h3>
-                    <p className="text-[11px] text-teal-100/90 leading-tight mt-0.5">
-                      Registra pagos, cuotas y cobranzas.
-                    </p>
+                  <div className="w-7 h-7 rounded-full bg-white text-[#0d9488] flex items-center justify-center flex-shrink-0 ml-2 group-hover:translate-x-0.5 transition-transform shadow-xs">
+                    <ArrowRight className="w-4 h-4" />
                   </div>
-                </div>
-                <div className="w-7 h-7 rounded-full bg-white text-[#0d9488] flex items-center justify-center flex-shrink-0 ml-2 group-hover:translate-x-0.5 transition-transform shadow-xs">
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-              </button>
+                </button>
+              )}
 
               {/* Card 6: Historial (Red) */}
               <button
@@ -534,20 +546,22 @@ export const InicioView: React.FC<InicioViewProps> = ({
                 </span>
               </div>
 
-              {/* Item 2 */}
-              <div className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#0284c7] text-white flex items-center justify-center flex-shrink-0 shadow-xs font-bold text-sm">
-                    $
+              {/* Item 2 (solo si tiene permiso para ver pagos) */}
+              {(!perms || perms.viewPagos) && (
+                <div className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-[#0284c7] text-white flex items-center justify-center flex-shrink-0 shadow-xs font-bold text-sm">
+                      $
+                    </div>
+                    <span className="text-sm text-slate-700 font-medium">
+                      Pagos recibidos
+                    </span>
                   </div>
-                  <span className="text-sm text-slate-700 font-medium">
-                    Pagos recibidos
+                  <span className="text-lg font-extrabold text-[#0284c7]">
+                    Bs. {totalPaymentsBs.toLocaleString('es-BO')}
                   </span>
                 </div>
-                <span className="text-lg font-extrabold text-[#0284c7]">
-                  Bs. {totalPaymentsBs.toLocaleString('es-BO')}
-                </span>
-              </div>
+              )}
 
               {/* Item 3 */}
               <div className="flex items-center justify-between py-3">

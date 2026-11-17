@@ -28,6 +28,7 @@ interface VentasViewProps {
   onOpenClientProfile: (clientId: string) => void;
   onOpenNewSale: () => void;
   onOpenPaymentPlan?: (sale: Sale) => void;
+  canCreateSales?: boolean;
 }
 
 export const VentasView: React.FC<VentasViewProps> = ({
@@ -36,6 +37,7 @@ export const VentasView: React.FC<VentasViewProps> = ({
   onOpenClientProfile,
   onOpenNewSale,
   onOpenPaymentPlan,
+  canCreateSales = true,
 }) => {
   const [selectedMonth, setSelectedMonth] = useState('Mayo 2025');
   const [periodFilter, setPeriodFilter] = useState<'mes' | 'semana' | 'año'>('mes');
@@ -143,12 +145,14 @@ export const VentasView: React.FC<VentasViewProps> = ({
             </button>
           </div>
 
-          <button
-            onClick={onOpenNewSale}
-            className="px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center gap-1.5"
-          >
-            <span>+ Nueva venta</span>
-          </button>
+          {canCreateSales && (
+            <button
+              onClick={onOpenNewSale}
+              className="px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>+ Nueva venta</span>
+            </button>
+          )}
         </div>
       </div>
 

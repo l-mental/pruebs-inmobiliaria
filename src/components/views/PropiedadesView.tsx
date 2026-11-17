@@ -11,7 +11,8 @@ import {
   Plus,
   Users,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Images
 } from 'lucide-react';
 import { Property } from '../../types';
 
@@ -20,6 +21,8 @@ interface PropiedadesViewProps {
   onSelectProperty: (property: Property) => void;
   onOpenNewProperty?: () => void;
   onSellProperty?: (property: Property) => void;
+  canManageProperties?: boolean;
+  canCreateSales?: boolean;
 }
 
 export const PropiedadesView: React.FC<PropiedadesViewProps> = ({
@@ -27,6 +30,8 @@ export const PropiedadesView: React.FC<PropiedadesViewProps> = ({
   onSelectProperty,
   onOpenNewProperty,
   onSellProperty,
+  canManageProperties = true,
+  canCreateSales = true,
 }) => {
   const [search, setSearch] = useState('');
   const [selectedType, setSelectedType] = useState<string>('Todos');
@@ -70,15 +75,17 @@ export const PropiedadesView: React.FC<PropiedadesViewProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onOpenNewProperty}
-            className="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 text-sm font-black rounded-2xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <Plus className="w-5 h-5" />
-            <span>+ Nueva Propiedad</span>
-          </button>
-        </div>
+        {canManageProperties && onOpenNewProperty && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onOpenNewProperty}
+              className="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 text-sm font-black rounded-2xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <Plus className="w-5 h-5" />
+              <span>+ Nueva Propiedad</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filter and Search Bar */}
@@ -156,6 +163,13 @@ export const PropiedadesView: React.FC<PropiedadesViewProps> = ({
                 {prop.urbanizationName && (
                   <span className="absolute bottom-3 left-3.5 px-3 py-1 bg-[#072a1b]/90 text-amber-300 text-xs font-black rounded-xl border border-amber-400/40 shadow-sm">
                     Urbanización: {prop.urbanizationName}
+                  </span>
+                )}
+
+                {prop.images && prop.images.length > 1 && (
+                  <span className="absolute bottom-3 right-3.5 px-2.5 py-1 bg-black/75 backdrop-blur-xs text-white text-xs font-extrabold rounded-xl border border-white/20 flex items-center gap-1.5 shadow-sm">
+                    <Images className="w-3.5 h-3.5 text-amber-300" />
+                    <span>{prop.images.length} fotos</span>
                   </span>
                 )}
               </div>
@@ -247,7 +261,7 @@ export const PropiedadesView: React.FC<PropiedadesViewProps> = ({
                     <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
                   </button>
 
-                  {onSellProperty && (
+                  {onSellProperty && canCreateSales && (
                     <button
                       onClick={() => onSellProperty(prop)}
                       className="flex-1 py-3 px-3 rounded-xl bg-[#0d3f2b] hover:bg-[#072a1c] text-xs font-black text-white transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"

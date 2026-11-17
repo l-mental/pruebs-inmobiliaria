@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, ChevronDown, User, ShieldCheck, Menu } from 'lucide-react';
+import { Calendar, Clock, ChevronDown, User, ShieldCheck, Menu, LogOut, UserCog } from 'lucide-react';
 import { Logo } from './Logo';
+import { NavTab, SystemUser } from '../types';
 
 interface HeaderProps {
-  currentRole: 'admin' | 'seller';
-  onChangeRole?: (role: 'admin' | 'seller') => void;
-  onRoleChange?: (role: 'admin' | 'seller') => void;
+  currentUser: SystemUser;
+  onNavigate?: (tab: NavTab) => void;
+  onLogout: () => void;
   onOpenMenu?: () => void;
-  onOpenNewSale?: () => void;
-  onOpenNewPayment?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
-  currentRole, 
-  onChangeRole,
-  onRoleChange,
+  currentUser,
+  onNavigate,
+  onLogout,
   onOpenMenu,
 }) => {
-  const handleRoleChange = onChangeRole || onRoleChange || (() => {});
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState('10:24 a.m.');
   const [currentDate] = useState('Lunes, 26 de mayo de 2025');
@@ -37,6 +35,8 @@ export const Header: React.FC<HeaderProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  const isAdmin = currentUser.role === 'admin';
+
   return (
     <header className="bg-[#072a1b] text-white border-b border-emerald-900/40 px-4 sm:px-6 py-2.5 flex items-center justify-between z-30 shadow-md">
       {/* Brand Logo & Slogan */}
@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
         <Logo subtitle="Crea tu origen y construye tu futuro..." />
       </div>
 
-      {/* Central poetic motto with green leaf accents (as seen in image.png) */}
+      {/* Central poetic motto with green leaf accents */}
       <div className="hidden lg:flex items-center gap-3">
         <span className="font-script text-2xl text-white tracking-wide select-none drop-shadow">
           Más que terrenos... <span className="block sm:inline">creamos tu futuro</span>
@@ -68,55 +68,58 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* User info & date/time widget */}
       <div className="flex items-center gap-5">
-        {/* User profile dropdown matching image.png */}
         <div className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-emerald-950/60 transition-colors"
+            className="flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-emerald-950/60 transition-colors cursor-pointer"
           >
-            {/* White round user avatar as in image.png */}
-            <div className="w-9 h-9 rounded-full bg-white text-emerald-950 flex items-center justify-center font-bold text-sm shadow-xs">
-              <User className="w-5 h-5 text-[#072a1b]" />
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shadow-xs ${
+              isAdmin ? 'bg-amber-400 text-slate-950' : 'bg-white text-[#072a1b]'
+            }`}>
+              {isAdmin ? <ShieldCheck className="w-5 h-5" /> : <User className="w-5 h-5" />}
             </div>
             <div className="text-left leading-tight hidden sm:block">
               <p className="text-sm font-semibold text-white">
-                {currentRole === 'admin' ? 'Administrador' : 'Juan Pérez'}
+                {currentUser.fullName}
               </p>
-              <p className="text-xs text-emerald-200/90 font-normal">
-                {currentRole === 'admin' ? 'Gestión Central' : 'Vendedor'}
+              <p className="text-[11px] font-bold text-amber-300">
+                {isAdmin ? 'Administrador • Acceso Total' : 'Empleado • Uso Limitado'}
               </p>
             </div>
             <ChevronDown className="w-4 h-4 text-emerald-200" />
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-52 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+            <div className="absolute right-0 mt-2 w-60 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
               <div className="px-3.5 py-2 border-b border-slate-100">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cambiar perfil</p>
+                <p className="text-xs font-extrabold text-slate-900 truncate">{currentUser.fullName}</p>
+                <p className="text-[11px] text-slate-500 font-semibold">
+                  @{currentUser.username} &bull; {currentUser.position}
+                </p>
               </div>
+
+              {currentUser.permissions.manageUsers && onNavigate && (
+                <button
+                  onClick={() => {
+                    onNavigate('usuarios');
+                    setDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-left text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 font-semibold transition-colors cursor-pointer"
+                >
+                  <UserCog className="w-4 h-4 text-emerald-700" />
+                  <span>Gestionar Usuarios</span>
+                </button>
+              )}
+
               <button
                 onClick={() => {
-                  handleRoleChange('admin');
                   setDropdownOpen(false);
+                  onLogout();
                 }}
-                className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-left hover:bg-emerald-50 transition-colors ${
-                  currentRole === 'admin' ? 'text-emerald-800 font-semibold bg-emerald-50/60' : 'text-slate-700'
-                }`}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-left text-rose-700 hover:bg-rose-50 font-bold transition-colors cursor-pointer"
               >
-                <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                <span>Administrador</span>
-              </button>
-              <button
-                onClick={() => {
-                  handleRoleChange('seller');
-                  setDropdownOpen(false);
-                }}
-                className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-left hover:bg-emerald-50 transition-colors ${
-                  currentRole === 'seller' ? 'text-emerald-800 font-semibold bg-emerald-50/60' : 'text-slate-700'
-                }`}
-              >
-                <User className="w-4 h-4 text-emerald-700" />
-                <span>Juan Pérez (Vendedor)</span>
+                <LogOut className="w-4 h-4 text-rose-600" />
+                <span>Cerrar Sesión</span>
               </button>
             </div>
           )}

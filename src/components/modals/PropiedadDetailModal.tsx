@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, MapPin, Maximize2, BedDouble, Bath, Car, CheckCircle2, Phone, Users, Building2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, MapPin, Maximize2, BedDouble, Bath, Car, CheckCircle2, Phone, Users, Building2, ChevronLeft, ChevronRight, Images } from 'lucide-react';
 import { Property } from '../../types';
 
 interface PropiedadDetailModalProps {
@@ -15,15 +15,28 @@ export const PropiedadDetailModal: React.FC<PropiedadDetailModalProps> = ({
   property,
   onOpenSaleModal,
 }) => {
+  const [activeImgIdx, setActiveImgIdx] = useState(0);
+
+  useEffect(() => {
+    setActiveImgIdx(0);
+  }, [property?.id, isOpen]);
+
   if (!isOpen || !property) return null;
+
+  const galleryImages =
+    property.images && property.images.length > 0
+      ? property.images
+      : [property.image];
+  const safeIdx = activeImgIdx < galleryImages.length ? activeImgIdx : 0;
+  const activeImageSrc = galleryImages[safeIdx] || property.image;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-150">
       <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header with image */}
-        <div className="relative h-64">
+        <div className="relative h-64 sm:h-72 flex-shrink-0">
           <img
-            src={property.image}
+            src={activeImageSrc}
             alt={property.title}
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover"
@@ -31,10 +44,38 @@ export const PropiedadDetailModal: React.FC<PropiedadDetailModalProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 text-white hover:bg-black/85 flex items-center justify-center cursor-pointer transition-colors"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 text-white hover:bg-black/85 flex items-center justify-center cursor-pointer transition-colors z-10"
           >
             <X className="w-5 h-5" />
           </button>
+
+          {galleryImages.length > 1 && (
+            <>
+              <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-black/65 text-white text-xs font-extrabold flex items-center gap-1.5 z-10">
+                <Images className="w-3.5 h-3.5 text-amber-300" />
+                <span>{safeIdx + 1} / {galleryImages.length}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setActiveImgIdx((prev) => (prev - 1 + galleryImages.length) % galleryImages.length)
+                }
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/55 hover:bg-black/80 text-white flex items-center justify-center cursor-pointer transition-colors z-10"
+                title="Imagen anterior"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveImgIdx((prev) => (prev + 1) % galleryImages.length)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/55 hover:bg-black/80 text-white flex items-center justify-center cursor-pointer transition-colors z-10"
+                title="Siguiente imagen"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+
           <div className="absolute bottom-4 left-6 right-6 text-white">
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-black rounded-lg uppercase tracking-wide">
@@ -56,6 +97,26 @@ export const PropiedadDetailModal: React.FC<PropiedadDetailModalProps> = ({
             </p>
           </div>
         </div>
+
+        {/* Thumbnail strip if multiple images */}
+        {galleryImages.length > 1 && (
+          <div className="px-6 py-2.5 bg-slate-100 border-b border-slate-200 flex items-center gap-2 overflow-x-auto flex-shrink-0">
+            {galleryImages.map((imgUrl, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setActiveImgIdx(idx)}
+                className={`w-16 h-12 rounded-lg overflow-hidden border-2 flex-shrink-0 cursor-pointer transition-all ${
+                  safeIdx === idx
+                    ? 'border-emerald-700 ring-2 ring-emerald-500/30 scale-105'
+                    : 'border-slate-300 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <img src={imgUrl} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Content */}
         <div className="p-6 sm:p-7 overflow-y-auto space-y-5 text-sm text-slate-700">
