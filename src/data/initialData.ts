@@ -688,6 +688,7 @@ export const INITIAL_URBANIZATIONS: Urbanization[] = [
     internalStreets: ['Calle 1 Los Sauces', 'Calle 2 Las Palmeras', 'Pasaje El Manantial (Sin salida)'],
     avenueLotsCount: 8,
     cornerLotsCount: 6,
+    hasCadastralPlan: true,
     amenities: ['Agua potable', 'Luz eléctrica', 'Vías enripiadas', 'Parque infantil', 'Canchas polifuncionales'],
     description: 'Nuestra urbanización estrella, rodeada de áreas verdes y vistas majestuosas a las montañas. Todos los trámites municipales aprobados.'
   },
@@ -707,6 +708,7 @@ export const INITIAL_URBANIZATIONS: Urbanization[] = [
     internalStreets: ['Calle El Bosque', 'Calle Las Retamas', 'Pasaje 1 (Interior)'],
     avenueLotsCount: 6,
     cornerLotsCount: 4,
+    hasCadastralPlan: false,
     amenities: ['Tendido eléctrico', 'Alcantarillado en ejecución', 'Transporte público directo', 'Áreas de recreación'],
     description: 'Zona de rápida plusvalía con acceso pavimentado y transporte continuo a minutos del centro de Sacaba.'
   },
@@ -726,6 +728,7 @@ export const INITIAL_URBANIZATIONS: Urbanization[] = [
     internalStreets: ['Calle Los Ceibos', 'Calle Los Álamos', 'Pasaje Río Verde (Fondo)'],
     avenueLotsCount: 5,
     cornerLotsCount: 4,
+    hasCadastralPlan: false,
     amenities: ['Agua de vertiente propia', 'Luz trifásica', 'Seguridad perimetral', 'Ciclovía interna'],
     description: 'Entorno campestre con excelente microclima, ideal para casas de campo o residencia permanente.'
   },
@@ -745,6 +748,7 @@ export const INITIAL_URBANIZATIONS: Urbanization[] = [
     internalStreets: ['Calle Del Sol', 'Calle La Cima', 'Pasaje Las Nubes (Sin salida)'],
     avenueLotsCount: 4,
     cornerLotsCount: 3,
+    hasCadastralPlan: false,
     amenities: ['Mirador panorámico', 'Calles empedradas', 'Club house', 'Energía solar comunitaria'],
     description: 'Vistas panorámicas inolvidables de todo el valle cochabambino con máxima tranquilidad.'
   },
@@ -764,6 +768,7 @@ export const INITIAL_URBANIZATIONS: Urbanization[] = [
     internalStreets: ['Calle Secundaria 1', 'Calle Secundaria 2', 'Pasaje de Servicio'],
     avenueLotsCount: 6,
     cornerLotsCount: 4,
+    hasCadastralPlan: false,
     amenities: ['Lotes industriales y residenciales', 'Vías anchas para transporte pesado', 'Agua de pozo profundo'],
     description: 'Excelente para urbanizaciones mixtas, depósitos o viviendas a precios de preventa inigualables.'
   }

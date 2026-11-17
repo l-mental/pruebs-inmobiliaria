@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, FilePlus, Check, MapPin, Sparkles, Compass } from 'lucide-react';
-import { Sale, Urbanization, PaymentModality, Client, Property } from '../../types';
+import { Sale, Urbanization, PaymentModality, Client, Property, Lot } from '../../types';
 
 interface RegistrarVentaModalProps {
   isOpen: boolean;
   onClose: () => void;
   urbanizations: Urbanization[];
-  onSaveSale: (sale: Sale) => void;
+  onSaveSale: (sale: Sale, matchedLotId?: string) => void;
   clients?: Client[];
   properties?: Property[];
+  lots?: Lot[];
+  exchangeRate?: number;
   initialLotData?: { 
+    lotId?: string;
     clientName?: string;
     clientCI?: string;
     clientPhone?: string;
     lotNumber: string; 
+    block?: string;
     urbanizationName: string; 
     priceBs: number; 
     surface: number;
@@ -29,14 +33,17 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
   onSaveSale,
   clients = [],
   properties = [],
+  lots = [],
+  exchangeRate = 6.96,
   initialLotData,
 }) => {
+  const [selectedLotId, setSelectedLotId] = useState<string | undefined>(initialLotData?.lotId);
   const [clientName, setClientName] = useState(initialLotData?.clientName || '');
   const [clientCI, setClientCI] = useState(initialLotData?.clientCI || '');
   const [clientPhone, setClientPhone] = useState(initialLotData?.clientPhone || '');
   const [urbanization, setUrbanization] = useState(initialLotData?.urbanizationName || urbanizations[0]?.name || 'Villa Bonita');
   const [lot, setLot] = useState(initialLotData?.lotNumber || 'Lote 15');
-  const [block, setBlock] = useState('Manzano 3');
+  const [block, setBlock] = useState(initialLotData?.block || 'Manzano 3');
   const [surface, setSurface] = useState(initialLotData?.surface ? `${initialLotData.surface} m²` : '300 m²');
   const [modality, setModality] = useState<PaymentModality>('Contado');
   const [amount, setAmount] = useState<number>(initialLotData?.priceBs || 45000);
@@ -48,25 +55,38 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
   const [longitude, setLongitude] = useState<string>(initialLotData?.longitude?.toString() || '-65.986330');
   const [isDetectingGps, setIsDetectingGps] = useState(false);
 
+  const availableLotsForUrb = useMemo(() => {
+    const matchedUrb = urbanizations.find(u => u.name === urbanization);
+    return lots.filter(
+      l =>
+        l.status === 'Disponible' &&
+        (l.urbanizationName === urbanization || (matchedUrb && l.urbanizationId === matchedUrb.id))
+    );
+  }, [lots, urbanization, urbanizations]);
+
   useEffect(() => {
+    if (!isOpen) return;
     if (initialLotData) {
-      if (initialLotData.clientName) setClientName(initialLotData.clientName);
-      if (initialLotData.clientCI) setClientCI(initialLotData.clientCI);
-      if (initialLotData.clientPhone) setClientPhone(initialLotData.clientPhone);
+      setSelectedLotId(initialLotData.lotId);
+      setClientName(initialLotData.clientName || '');
+      setClientCI(initialLotData.clientCI || '');
+      setClientPhone(initialLotData.clientPhone || '');
       if (initialLotData.urbanizationName) setUrbanization(initialLotData.urbanizationName);
       if (initialLotData.lotNumber) setLot(initialLotData.lotNumber);
+      if (initialLotData.block) setBlock(initialLotData.block);
       if (initialLotData.priceBs) setAmount(initialLotData.priceBs);
       if (initialLotData.surface) setSurface(`${initialLotData.surface} m²`);
       if (initialLotData.latitude) setLatitude(initialLotData.latitude.toString());
       if (initialLotData.longitude) setLongitude(initialLotData.longitude.toString());
     } else {
+      setSelectedLotId(undefined);
       const currentU = urbanizations.find(u => u.name === urbanization) || urbanizations[0];
       if (currentU?.latitude && currentU?.longitude) {
         setLatitude(currentU.latitude.toString());
         setLongitude(currentU.longitude.toString());
       }
     }
-  }, [initialLotData, isOpen, urbanization, urbanizations]);
+  }, [initialLotData, isOpen]);
 
   if (!isOpen) return null;
 
@@ -128,7 +148,7 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
       longitude: parseFloat(longitude) || -65.986330,
     };
 
-    onSaveSale(newSale);
+    onSaveSale(newSale, selectedLotId);
     onClose();
   };
 
@@ -231,7 +251,7 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
                         if (selected.urbanizationName) setUrbanization(selected.urbanizationName);
                         if (selected.propertyName || selected.title) setLot(selected.propertyName || selected.title);
                         if (selected.price) {
-                          setAmount(selected.currency === '$us.' ? Math.round(selected.price * 6.96) : selected.price);
+                          setAmount(selected.currency === '$us.' ? Math.round(selected.price * exchangeRate) : selected.price);
                         }
                         if (selected.area) setSurface(`${selected.area} m²`);
                       }
@@ -293,10 +313,37 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
           </div>
 
           {/* Inmueble */}
-          <div className="pt-2 border-t border-slate-100">
-            <h3 className="font-bold text-slate-800 uppercase tracking-wider mb-2">
-              Datos del Terreno / Lote
-            </h3>
+          <div className="pt-2 border-t border-slate-100 space-y-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h3 className="font-bold text-slate-800 uppercase tracking-wider">
+                Datos del Terreno / Lote
+              </h3>
+              {availableLotsForUrb.length > 0 && (
+                <select
+                  value={selectedLotId || ''}
+                  onChange={(e) => {
+                    const chosen = availableLotsForUrb.find(l => l.id === e.target.value);
+                    if (chosen) {
+                      setSelectedLotId(chosen.id);
+                      setLot(chosen.lotNumber);
+                      setBlock(chosen.block);
+                      setSurface(`${chosen.surface} m²`);
+                      setAmount(chosen.priceBs);
+                      if (chosen.latitude) setLatitude(chosen.latitude.toString());
+                      if (chosen.longitude) setLongitude(chosen.longitude.toString());
+                    }
+                  }}
+                  className="px-2.5 py-1.5 bg-emerald-50 border border-emerald-300 rounded-lg text-[11px] font-bold text-emerald-950 cursor-pointer"
+                >
+                  <option value="">-- Elegir lote disponible de {urbanization} ({availableLotsForUrb.length}) --</option>
+                  {availableLotsForUrb.map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.block} • {l.lotNumber} ({l.surface} m² - Bs. {l.priceBs.toLocaleString('es-BO')})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div>
                 <label className="block text-slate-600 font-semibold mb-1">Condominio / Urbanización</label>
@@ -304,6 +351,7 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
                   value={urbanization}
                   onChange={(e) => {
                     setUrbanization(e.target.value);
+                    setSelectedLotId(undefined);
                     const found = urbanizations.find(u => u.name === e.target.value);
                     if (found?.latitude && found?.longitude) {
                       setLatitude(found.latitude.toString());
@@ -322,7 +370,10 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
                 <input
                   type="text"
                   value={lot}
-                  onChange={(e) => setLot(e.target.value)}
+                  onChange={(e) => {
+                    setLot(e.target.value);
+                    setSelectedLotId(undefined);
+                  }}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold"
                 />
               </div>
@@ -331,7 +382,10 @@ export const RegistrarVentaModal: React.FC<RegistrarVentaModalProps> = ({
                 <input
                   type="text"
                   value={block}
-                  onChange={(e) => setBlock(e.target.value)}
+                  onChange={(e) => {
+                    setBlock(e.target.value);
+                    setSelectedLotId(undefined);
+                  }}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
                 />
               </div>

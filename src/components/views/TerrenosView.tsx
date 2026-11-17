@@ -7,29 +7,21 @@ import {
   Eye, 
   Plus, 
   Layers, 
-  Navigation,
   Compass,
   Building2,
   CheckCheck,
   Maximize2,
   LayoutGrid,
-  Zap,
-  Droplets,
   FileText,
-  Calculator,
   MessageCircle,
   Map,
-  ShieldCheck,
-  AlertTriangle,
   RotateCcw,
-  Footprints,
   Trees,
   Car,
   ChevronLeft,
   ChevronRight,
   Coins,
   CheckCircle2,
-  Landmark,
   Tag,
   Filter,
   Home,
@@ -45,8 +37,10 @@ import { InteractiveMapView } from './InteractiveMapView';
 interface TerrenosViewProps {
   lots: Lot[];
   urbanizations: Urbanization[];
+  exchangeRate?: number;
   onSelectLotForSale: (lot: Lot, urb: Urbanization) => void;
   onAddUrbanization: (urb: Urbanization, generatedLots?: Lot[]) => void;
+  onUpdateUrbanization?: (urb: Urbanization) => void;
   onAddLot: (lot: Lot) => void;
   onUpdateLot?: (lot: Lot) => void;
 }
@@ -54,8 +48,10 @@ interface TerrenosViewProps {
 export const TerrenosView: React.FC<TerrenosViewProps> = ({
   lots,
   urbanizations,
+  exchangeRate = 6.96,
   onSelectLotForSale,
   onAddUrbanization,
+  onUpdateUrbanization,
   onAddLot,
   onUpdateLot,
 }) => {
@@ -71,7 +67,7 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
-  // Manzaneo structure view state (from user screenshots)
+  // Manzaneo structure view state
   const [mzaViewTab, setMzaViewTab] = useState<'detalle' | 'general'>('detalle');
   const [activeMzaIndex, setActiveMzaIndex] = useState<number>(0);
   const [selectedLotInMza, setSelectedLotInMza] = useState<number>(1);
@@ -79,6 +75,8 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
   const [mzaEditFront, setMzaEditFront] = useState<number>(5);
   const [mzaEditDepth, setMzaEditDepth] = useState<number>(40);
   const [mzaEditStatus, setMzaEditStatus] = useState<LotStatus>('Disponible');
+  const [mzaEditPriceUsd, setMzaEditPriceUsd] = useState<number>(26000);
+  const [mzaEditPriceBs, setMzaEditPriceBs] = useState<number>(Math.round(26000 * exchangeRate));
   const [mzaSaveToast, setMzaSaveToast] = useState<string | null>(null);
 
   // Modals state
@@ -173,8 +171,8 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
   }, [filteredLots]);
 
   const selectedLot = useMemo(() => {
-    return lots.find(l => l.id === selectedLotId) || filteredLots[0] || urbLots[0] || lots[0];
-  }, [lots, selectedLotId, filteredLots, urbLots]);
+    return urbLots.find(l => l.id === selectedLotId) || filteredLots[0] || urbLots[0] || null;
+  }, [urbLots, selectedLotId, filteredLots]);
 
   // Manzaneo visualizer calculations and active lot sync
   const urbBlocksList = useMemo(() => {
@@ -198,18 +196,25 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
       return numOnly === String(selectedLotInMza) || l.lotNumber === `Lote ${selectedLotInMza}` || l.lotNumber === `${selectedLotInMza}`;
     }) || lotsInActiveMza[selectedLotInMza - 1];
 
+    const fallbackPriceUsd = Math.round(200 * (currentUrb?.basePricePerM2 || currentUrb?.pricePerM2 || 130));
     if (found) {
       setMzaEditArea(found.surface || 200);
       setMzaEditFront(found.front || 5);
       setMzaEditDepth(found.depth || 40);
       setMzaEditStatus(found.status || 'Disponible');
+      const usdVal = found.priceUsd || Math.round((found.priceBs || 0) / exchangeRate);
+      const bsVal = found.priceBs || Math.round(usdVal * exchangeRate);
+      setMzaEditPriceUsd(usdVal);
+      setMzaEditPriceBs(bsVal);
     } else {
       setMzaEditArea(200);
       setMzaEditFront(5);
       setMzaEditDepth(40);
       setMzaEditStatus('Disponible');
+      setMzaEditPriceUsd(fallbackPriceUsd);
+      setMzaEditPriceBs(Math.round(fallbackPriceUsd * exchangeRate));
     }
-  }, [selectedLotInMza, activeMzaName, lotsInActiveMza]);
+  }, [selectedLotInMza, activeMzaName, lotsInActiveMza, currentUrb, exchangeRate]);
 
   const handleSaveMzaLotDetails = () => {
     const found = lotsInActiveMza.find(l => {
@@ -218,14 +223,20 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
     }) || lotsInActiveMza[selectedLotInMza - 1];
 
     if (found) {
+      const finalUsd = Number(mzaEditPriceUsd) > 0
+        ? Math.round(Number(mzaEditPriceUsd))
+        : Math.round((Number(mzaEditArea) || found.surface) * (currentUrb.basePricePerM2 || currentUrb.pricePerM2 || 130));
+      const finalBs = Number(mzaEditPriceBs) > 0
+        ? Math.round(Number(mzaEditPriceBs))
+        : Math.round(finalUsd * exchangeRate);
       const updatedLot: Lot = {
         ...found,
         surface: Number(mzaEditArea) || found.surface,
         front: Number(mzaEditFront) || found.front,
         depth: Number(mzaEditDepth) || found.depth,
         status: mzaEditStatus,
-        priceBs: Math.round((Number(mzaEditArea) || found.surface) * (currentUrb.basePricePerM2 || 130) * 6.96),
-        priceUsd: Math.round((Number(mzaEditArea) || found.surface) * (currentUrb.basePricePerM2 || currentUrb.pricePerM2 || 130)),
+        priceBs: finalBs,
+        priceUsd: finalUsd,
       };
       if (onUpdateLot) {
         onUpdateLot(updatedLot);
@@ -449,11 +460,17 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
             <select
               value={selectedUrbId}
               onChange={(e) => {
-                setSelectedUrbId(e.target.value);
+                const nextId = e.target.value;
+                setSelectedUrbId(nextId);
                 setSelectedBlock('Todos');
+                setStatusFilter('Todos');
+                setLocationFilter('Todos');
+                setSearchQuery('');
+                setActiveMzaIndex(0);
+                setSelectedLotInMza(1);
                 setCurrentPage(1);
-                const firstLot = lots.find(l => l.urbanizationId === e.target.value);
-                if (firstLot) setSelectedLotId(firstLot.id);
+                const firstLot = lots.find(l => l.urbanizationId === nextId);
+                setSelectedLotId(firstLot ? firstLot.id : '');
               }}
               className="text-xs font-black text-slate-900 bg-transparent focus:outline-none cursor-pointer pr-1 w-full sm:w-auto truncate"
             >
@@ -737,45 +754,53 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                     {/* Left Column: Información Básica & Configuración */}
                     <div className="lg:col-span-5 flex flex-col gap-4">
                       {/* Información Básica */}
-                      <div className="bg-white/95 rounded-2xl p-4 shadow-sm border border-[#dad2c3]">
+                      <div className="bg-white/95 rounded-2xl p-4 shadow-sm border border-[#dad2c3] overflow-hidden">
                         <h4 className="text-center font-black text-slate-800 text-xs tracking-wide uppercase mb-3">
                           INFORMACIÓN BÁSICA
                         </h4>
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div className="flex items-center gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                          <div className="flex items-center gap-2.5 min-w-0 overflow-hidden bg-slate-50/70 p-2 rounded-xl border border-slate-200/70">
                             <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 shrink-0">
                               <Tag className="w-4 h-4" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1 overflow-hidden">
                               <div className="text-[10px] text-slate-500 font-semibold">Nombre:</div>
-                              <div className="font-black text-slate-900 truncate">{currentUrb.name}</div>
+                              <div className="font-black text-slate-900 truncate" title={currentUrb.name}>
+                                {currentUrb.name}
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0 overflow-hidden bg-slate-50/70 p-2 rounded-xl border border-slate-200/70">
                             <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 shrink-0">
                               <MapPin className="w-4 h-4" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1 overflow-hidden">
                               <div className="text-[10px] text-slate-500 font-semibold">Ubicación:</div>
-                              <div className="font-black text-slate-900 truncate">{currentUrb.location}</div>
+                              <div className="font-black text-slate-900 truncate" title={currentUrb.location}>
+                                {currentUrb.location}
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0 overflow-hidden bg-slate-50/70 p-2 rounded-xl border border-slate-200/70">
                             <div className="p-2 bg-amber-100/70 border border-amber-300 rounded-lg text-amber-900 shrink-0">
                               <Coins className="w-4 h-4" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1 overflow-hidden">
                               <div className="text-[10px] text-slate-500 font-semibold">Precio ref./m²:</div>
-                              <div className="font-black text-slate-900">${currentUrb.basePricePerM2 || 130}</div>
+                              <div className="font-black text-slate-900 truncate">
+                                ${currentUrb.basePricePerM2 || currentUrb.pricePerM2 || 130} USD
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0 overflow-hidden bg-slate-50/70 p-2 rounded-xl border border-slate-200/70">
                             <div className="p-2 bg-sky-50 border border-sky-200 rounded-lg text-sky-800 shrink-0">
                               <Building2 className="w-4 h-4" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1 overflow-hidden">
                               <div className="text-[10px] text-slate-500 font-semibold">Ciudad:</div>
-                              <div className="font-black text-slate-900 truncate">{currentUrb.city || 'Cochabamba'}</div>
+                              <div className="font-black text-slate-900 truncate" title={currentUrb.city || 'Cochabamba'}>
+                                {currentUrb.city || 'Cochabamba'}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1133,19 +1158,25 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                             DETALLES DEL LOTE SELECCIONADO: LOTE {selectedLotInMza} ({activeMzaName})
                           </div>
 
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 items-end">
                             <div>
                               <label className="block text-[11px] font-bold text-slate-700 mb-1">
                                 Área (m²)
                               </label>
                               <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-600/20 focus-within:border-emerald-600 transition-all">
-                                <Maximize2 className="w-4 h-4 text-slate-500" />
+                                <Maximize2 className="w-4 h-4 text-slate-500 shrink-0" />
                                 <input
                                   type="number"
                                   step="0.1"
                                   value={mzaEditArea}
-                                  onChange={(e) => setMzaEditArea(parseFloat(e.target.value) || 0)}
-                                  className="w-full bg-transparent text-xs font-black text-slate-900 focus:outline-none"
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    setMzaEditArea(val);
+                                    const nextUsd = Math.round(val * (currentUrb.basePricePerM2 || currentUrb.pricePerM2 || 130));
+                                    setMzaEditPriceUsd(nextUsd);
+                                    setMzaEditPriceBs(Math.round(nextUsd * exchangeRate));
+                                  }}
+                                  className="w-full min-w-0 bg-transparent text-xs font-black text-slate-900 focus:outline-none"
                                 />
                               </div>
                             </div>
@@ -1155,13 +1186,13 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                                 Frente (m)
                               </label>
                               <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-600/20 focus-within:border-emerald-600 transition-all">
-                                <ArrowLeftRight className="w-4 h-4 text-slate-500" />
+                                <ArrowLeftRight className="w-4 h-4 text-slate-500 shrink-0" />
                                 <input
                                   type="number"
                                   step="0.1"
                                   value={mzaEditFront}
                                   onChange={(e) => setMzaEditFront(parseFloat(e.target.value) || 0)}
-                                  className="w-full bg-transparent text-xs font-black text-slate-900 focus:outline-none"
+                                  className="w-full min-w-0 bg-transparent text-xs font-black text-slate-900 focus:outline-none"
                                 />
                               </div>
                             </div>
@@ -1171,13 +1202,55 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                                 Fondo (m)
                               </label>
                               <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-600/20 focus-within:border-emerald-600 transition-all">
-                                <ArrowUpDown className="w-4 h-4 text-slate-500" />
+                                <ArrowUpDown className="w-4 h-4 text-slate-500 shrink-0" />
                                 <input
                                   type="number"
                                   step="0.1"
                                   value={mzaEditDepth}
                                   onChange={(e) => setMzaEditDepth(parseFloat(e.target.value) || 0)}
-                                  className="w-full bg-transparent text-xs font-black text-slate-900 focus:outline-none"
+                                  className="w-full min-w-0 bg-transparent text-xs font-black text-slate-900 focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-emerald-800 mb-1">
+                                Precio ($us.)
+                              </label>
+                              <div className="flex items-center gap-1.5 bg-emerald-50/70 border border-emerald-300 rounded-xl px-2.5 py-1.5">
+                                <span className="text-[11px] font-black text-emerald-700 shrink-0">$us.</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="10"
+                                  value={mzaEditPriceUsd}
+                                  onChange={(e) => {
+                                    const usd = Math.max(0, parseFloat(e.target.value) || 0);
+                                    setMzaEditPriceUsd(usd);
+                                    setMzaEditPriceBs(Math.round(usd * exchangeRate));
+                                  }}
+                                  className="w-full min-w-0 bg-transparent text-xs font-black text-emerald-950 focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                Precio (Bs.)
+                              </label>
+                              <div className="flex items-center gap-1.5 bg-amber-50/70 border border-amber-300 rounded-xl px-2.5 py-1.5">
+                                <span className="text-[11px] font-black text-amber-800 shrink-0">Bs.</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="50"
+                                  value={mzaEditPriceBs}
+                                  onChange={(e) => {
+                                    const bs = Math.max(0, parseFloat(e.target.value) || 0);
+                                    setMzaEditPriceBs(bs);
+                                    setMzaEditPriceUsd(exchangeRate > 0 ? Math.round(bs / exchangeRate) : 0);
+                                  }}
+                                  className="w-full min-w-0 bg-transparent text-xs font-black text-slate-900 focus:outline-none"
                                 />
                               </div>
                             </div>
@@ -1206,7 +1279,7 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                               </div>
                             ) : (
                               <div className="text-xs text-slate-600 font-semibold">
-                                Valor estimado: <strong className="text-slate-900 font-black">${(mzaEditArea * (currentUrb.basePricePerM2 || currentUrb.pricePerM2 || 130)).toLocaleString()} USD</strong> <span className="text-slate-400">&bull;</span> Bs. {(mzaEditArea * (currentUrb.basePricePerM2 || currentUrb.pricePerM2 || 130) * 6.96).toLocaleString()}
+                                Valor estimado (T.C. {exchangeRate.toFixed(2)}): <strong className="text-slate-900 font-black">$us. {mzaEditPriceUsd.toLocaleString('es-BO')}</strong> <span className="text-slate-400">&bull;</span> <strong className="text-emerald-800">Bs. {mzaEditPriceBs.toLocaleString('es-BO')}</strong>
                               </div>
                             )}
                             <button
@@ -1230,6 +1303,8 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                   selectedLot={selectedLot}
                   onSelectLot={(lot) => setSelectedLotId(lot.id)}
                   onSelectForSale={onSelectLotForSale}
+                  onUpdateUrbanization={onUpdateUrbanization}
+                  exchangeRate={exchangeRate}
                 />
               ) : viewMode === 'plan' ? (
                 <div className="space-y-5">
@@ -1809,100 +1884,12 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                 );
               })()}
 
-              {/* Croquis Catastral Dibujado en el Sistema (Warm Architectural Stone Palette #ece7de) */}
-              <div className="space-y-2 pt-2 border-t border-slate-100">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Maximize2 className="w-3.5 h-3.5 text-emerald-700" />
-                    Croquis Catastral (Sistema Propio)
-                  </h3>
-                  <span className="text-[11px] font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                    {selectedLot.front}m × {selectedLot.depth}m
-                  </span>
-                </div>
-
-                <div className="bg-[#ece7de] rounded-2xl border-2 border-[#d5cbba] p-3.5 flex flex-col items-center shadow-inner">
-                  <svg viewBox="0 0 300 155" className="w-full h-36">
-                    {/* Top road representation */}
-                    <rect
-                      x="15"
-                      y="6"
-                      width="270"
-                      height="26"
-                      rx="6"
-                      fill={selectedLot.hasAvenueAccess ? '#1e293b' : '#94a3b8'}
-                    />
-                    {selectedLot.hasAvenueAccess && (
-                      <line x1="25" y1="19" x2="275" y2="19" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="6 4" />
-                    )}
-                    <text
-                      x="150"
-                      y="22"
-                      textAnchor="middle"
-                      fill={selectedLot.hasAvenueAccess ? '#fde68a' : '#ffffff'}
-                      fontSize="8.5"
-                      fontWeight="bold"
-                    >
-                      {selectedLot.hasAvenueAccess
-                        ? `🛣️ ${selectedLot.streetName || currentUrb.mainAvenueName || 'AVENIDA PRINCIPAL (25m)'}`
-                        : `🏘️ ${selectedLot.streetName || 'CALLE INTERNA SECUNDARIA (12m)'}`}
-                    </text>
-
-                    {/* Parcel Polygon in Architectural Olive #c2d287 & #4a5823 */}
-                    <rect
-                      x="55"
-                      y="40"
-                      width="190"
-                      height="95"
-                      rx="8"
-                      fill="#c2d287"
-                      stroke="#4a5823"
-                      strokeWidth="2.5"
-                    />
-                    <text x="150" y="53" textAnchor="middle" fill="#2d3714" fontSize="9" fontWeight="900">
-                      FRENTE: {selectedLot.front} METROS
-                    </text>
-                    <rect x="95" y="64" width="110" height="38" rx="8" fill="#ffffff" stroke="#4a5823" strokeWidth="1.5" />
-                    <text x="150" y="82" textAnchor="middle" fill="#1e293b" fontSize="13" fontWeight="900">
-                      {selectedLot.surface} m²
-                    </text>
-                    <text x="150" y="95" textAnchor="middle" fill="#4a5823" fontSize="8.5" fontWeight="900">
-                      {selectedLot.lotNumber.toUpperCase()} &bull; {selectedLot.block}
-                    </text>
-                    <text x="44" y="90" textAnchor="middle" fill="#4a5823" fontSize="8" fontWeight="bold" transform="rotate(-90 44 90)">
-                      FONDO {selectedLot.depth}m
-                    </text>
-                    <text x="256" y="90" textAnchor="middle" fill="#4a5823" fontSize="8" fontWeight="bold" transform="rotate(90 256 90)">
-                      FONDO {selectedLot.depth}m
-                    </text>
-                    <text x="150" y="148" textAnchor="middle" fill="#4a5823" fontSize="8.5" fontWeight="bold">
-                      LINDERO POSTERIOR: {selectedLot.front}m
-                    </text>
-                  </svg>
-
-                  <div className="grid grid-cols-3 gap-2 w-full pt-2.5 text-[11px]">
-                    <div className="flex items-center justify-center gap-1.5 p-1.5 bg-white rounded-xl border border-[#d5cbba] font-bold text-slate-800 shadow-2xs">
-                      <Droplets className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Agua Potable</span>
-                    </div>
-                    <div className="flex items-center justify-center gap-1.5 p-1.5 bg-white rounded-xl border border-[#d5cbba] font-bold text-slate-800 shadow-2xs">
-                      <Zap className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Luz Eléctrica</span>
-                    </div>
-                    <div className="flex items-center justify-center gap-1.5 p-1.5 bg-white rounded-xl border border-[#d5cbba] font-bold text-slate-800 shadow-2xs">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                      <span>Folio Real</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Datos Económicos y Financiamiento */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-2 text-xs">
                 <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>Precios y Financiamiento</span>
                   <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded">
-                    Sin Interés Bancario
+                    T.C. {exchangeRate.toFixed(2)} &bull; Sin Interés Bancario
                   </span>
                 </h3>
 
@@ -1916,7 +1903,7 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
                 <div className="flex items-center justify-between py-1 border-b border-slate-200/60">
                   <span className="text-slate-600 font-medium">Equivalente en Dólares:</span>
                   <span className="font-bold text-slate-800">
-                    $us. {selectedLot.priceUsd.toLocaleString('es-BO')}
+                    $us. {(selectedLot.priceUsd || Math.round(selectedLot.priceBs / exchangeRate)).toLocaleString('es-BO')}
                   </span>
                 </div>
 
@@ -2024,11 +2011,24 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
       <CrearCondominioModal
         isOpen={isNewCondoOpen}
         onClose={() => setIsNewCondoOpen(false)}
+        exchangeRate={exchangeRate}
         onSaveUrbanization={(newUrb, generatedLots) => {
           onAddUrbanization(newUrb, generatedLots);
           setSelectedUrbId(newUrb.id);
+          setSelectedBlock('Todos');
+          setStatusFilter('Todos');
+          setLocationFilter('Todos');
+          setSearchQuery('');
+          setActiveMzaIndex(0);
+          setSelectedLotInMza(1);
+          setCurrentPage(1);
+          if (generatedLots && generatedLots.length > 0) {
+            setSelectedLotId(generatedLots[0].id);
+          } else {
+            setSelectedLotId('');
+          }
           const lotsCount = generatedLots?.length || 0;
-          showToast(`Urbanización "${newUrb.name}" creada con éxito ${lotsCount > 0 ? `(${lotsCount} terrenos distribuidos sobre avenida y vías)` : ''}`);
+          showToast(`Urbanización "${newUrb.name}" creada con éxito ${lotsCount > 0 ? `(${lotsCount} terrenos distribuidos)` : ''}`);
         }}
       />
 
@@ -2046,6 +2046,7 @@ export const TerrenosView: React.FC<TerrenosViewProps> = ({
         urbanizations={urbanizations}
         currentUrbId={selectedUrbId}
         availableBlocks={blocks}
+        exchangeRate={exchangeRate}
         onSaveLot={(newLot) => {
           onAddLot(newLot);
           setSelectedLotId(newLot.id);

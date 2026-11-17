@@ -20,6 +20,7 @@ interface CrearCondominioModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveUrbanization: (urb: Urbanization, generatedLots?: Lot[]) => void;
+  exchangeRate?: number;
 }
 
 export interface ManzanoConfig {
@@ -38,12 +39,14 @@ export interface LotDetail {
   status: LotStatus;
   priceBs?: number;
   priceUsd?: number;
+  isCustomPrice?: boolean;
 }
 
 export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
   isOpen,
   onClose,
   onSaveUrbanization,
+  exchangeRate = 6.96,
 }) => {
   // INFORMACIÓN BÁSICA (Matching Screenshot)
   const [name, setName] = useState('Los Ceibos');
@@ -118,6 +121,7 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
     if (lotDetailsMap[key]) {
       return lotDetailsMap[key];
     }
+    const defaultUsd = Math.round(200 * priceM2);
     return {
       id: key,
       lotNumber: `${lotNum}`,
@@ -126,8 +130,9 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
       front: 5.0,
       depth: 40.0,
       status: 'Disponible',
-      priceBs: Math.round(200 * priceM2 * 6.96),
-      priceUsd: Math.round(200 * priceM2),
+      priceBs: Math.round(defaultUsd * exchangeRate),
+      priceUsd: defaultUsd,
+      isCustomPrice: false,
     };
   };
 
@@ -135,13 +140,16 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
   const [selectedLotNum, setSelectedLotNum] = useState<number>(1);
   const currentLotDetail = useMemo(() => {
     return getLotDetail(activeManzano.name, selectedLotNum);
-  }, [activeManzano.name, selectedLotNum, lotDetailsMap, priceM2]);
+  }, [activeManzano.name, selectedLotNum, lotDetailsMap, priceM2, exchangeRate]);
 
-  // Form Inputs for Selected Lot (matching Image 2)
+  // Form Inputs for Selected Lot
   const [editArea, setEditArea] = useState<number>(currentLotDetail.area);
   const [editFront, setEditFront] = useState<number>(currentLotDetail.front);
   const [editDepth, setEditDepth] = useState<number>(currentLotDetail.depth);
   const [editStatus, setEditStatus] = useState<LotStatus>(currentLotDetail.status);
+  const [editPriceUsd, setEditPriceUsd] = useState<number>(currentLotDetail.priceUsd ?? Math.round(currentLotDetail.area * priceM2));
+  const [editPriceBs, setEditPriceBs] = useState<number>(currentLotDetail.priceBs ?? Math.round(currentLotDetail.area * priceM2 * exchangeRate));
+  const [isCustomPrice, setIsCustomPrice] = useState<boolean>(Boolean(currentLotDetail.isCustomPrice));
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -150,20 +158,87 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
     setEditFront(detail.front);
     setEditDepth(detail.depth);
     setEditStatus(detail.status);
+    const usdVal = detail.priceUsd ?? Math.round(detail.area * priceM2);
+    const bsVal = detail.priceBs ?? Math.round(usdVal * exchangeRate);
+    setEditPriceUsd(usdVal);
+    setEditPriceBs(bsVal);
+    setIsCustomPrice(Boolean(detail.isCustomPrice));
   }, [selectedLotNum, activeManzano.name]);
+
+  const persistCurrentLotPatch = (patch: Partial<LotDetail>) => {
+    const key = `${activeManzano.name}_Lote_${selectedLotNum}`;
+    const currentArea = patch.area ?? editArea;
+    const currentFront = patch.front ?? editFront;
+    const currentDepth = patch.depth ?? editDepth;
+    const currentStatus = patch.status ?? editStatus;
+    const currentUsd = patch.priceUsd ?? editPriceUsd;
+    const currentBs = patch.priceBs ?? editPriceBs;
+    const currentCustom = patch.isCustomPrice ?? isCustomPrice;
+
+    setLotDetailsMap(prev => ({
+      ...prev,
+      [key]: {
+        id: key,
+        lotNumber: `${selectedLotNum}`,
+        blockName: activeManzano.name,
+        area: Number(currentArea) || 200,
+        front: Number(currentFront) || 5,
+        depth: Number(currentDepth) || 40,
+        status: currentStatus,
+        priceUsd: Math.max(0, Number(currentUsd) || 0),
+        priceBs: Math.max(0, Number(currentBs) || 0),
+        isCustomPrice: currentCustom,
+      },
+    }));
+  };
+
+  const handleAreaChange = (newArea: number) => {
+    setEditArea(newArea);
+    if (!isCustomPrice) {
+      const autoUsd = Math.round(newArea * priceM2);
+      const autoBs = Math.round(autoUsd * exchangeRate);
+      setEditPriceUsd(autoUsd);
+      setEditPriceBs(autoBs);
+      persistCurrentLotPatch({ area: newArea, priceUsd: autoUsd, priceBs: autoBs, isCustomPrice: false });
+    } else {
+      persistCurrentLotPatch({ area: newArea });
+    }
+  };
+
+  const handlePriceUsdChange = (newUsd: number) => {
+    const cleanUsd = Math.max(0, newUsd);
+    const syncedBs = Math.round(cleanUsd * exchangeRate);
+    setEditPriceUsd(cleanUsd);
+    setEditPriceBs(syncedBs);
+    setIsCustomPrice(true);
+    persistCurrentLotPatch({ priceUsd: cleanUsd, priceBs: syncedBs, isCustomPrice: true });
+  };
+
+  const handlePriceBsChange = (newBs: number) => {
+    const cleanBs = Math.max(0, newBs);
+    const syncedUsd = exchangeRate > 0 ? Math.round(cleanBs / exchangeRate) : 0;
+    setEditPriceBs(cleanBs);
+    setEditPriceUsd(syncedUsd);
+    setIsCustomPrice(true);
+    persistCurrentLotPatch({ priceUsd: syncedUsd, priceBs: cleanBs, isCustomPrice: true });
+  };
 
   const handleSaveLotDetails = () => {
     const key = `${activeManzano.name}_Lote_${selectedLotNum}`;
+    const finalArea = Number(editArea) || 200;
+    const finalUsd = Number(editPriceUsd) > 0 ? Number(editPriceUsd) : Math.round(finalArea * priceM2);
+    const finalBs = Number(editPriceBs) > 0 ? Number(editPriceBs) : Math.round(finalUsd * exchangeRate);
     const updated: LotDetail = {
       id: key,
       lotNumber: `${selectedLotNum}`,
       blockName: activeManzano.name,
-      area: Number(editArea) || 200,
+      area: finalArea,
       front: Number(editFront) || 5,
       depth: Number(editDepth) || 40,
       status: editStatus,
-      priceBs: Math.round((Number(editArea) || 200) * priceM2 * 6.96),
-      priceUsd: Math.round((Number(editArea) || 200) * priceM2),
+      priceBs: finalBs,
+      priceUsd: finalUsd,
+      isCustomPrice,
     };
 
     setLotDetailsMap(prev => ({
@@ -195,38 +270,27 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
     const urbId = `URB-${Date.now().toString().slice(-4)}`;
     const parsedPriceM2 = Number(priceM2) || 130;
 
-    const newUrbanization: Urbanization = {
-      id: urbId,
-      name: name.trim(),
-      city: city.trim() || 'Cochabamba',
-      location: location.trim(),
-      totalLots: totalLotesAsignados,
-      availableLots: totalLotesAsignados,
-      soldLots: 0,
-      reservedLots: 0,
-      pricePerM2: parsedPriceM2,
-      basePricePerM2: parsedPriceM2,
-      latitude: -17.3935,
-      longitude: -66.1570,
-      description: `Urbanización ${name.trim()} ubicada en ${location.trim()}, ${city.trim()}. Con ${manzanosList.length} manzanos y ${totalLotesAsignados} lotes asignados.`,
-      amenities: ['Agua Potable', 'Energía Eléctrica', 'Vías Pavimentadas', 'Áreas Verdes'],
-      features: ['Agua Potable', 'Energía Eléctrica', 'Vías Pavimentadas', 'Áreas Verdes'],
-      image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
-      images: [
-        'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
-      ],
-      manzanosCount: manzanosList.length,
-    };
-
     // Generate all lots for all manzanos according to flexible allocation
     const allGeneratedLots: Lot[] = [];
 
     manzanosList.forEach((mza, mzaIdx) => {
       for (let l = 1; l <= mza.lotsCount; l++) {
+        const isCurrentlyEditedLot = mza.name === activeManzano.name && l === selectedLotNum;
         const detail = getLotDetail(mza.name, l);
-        const surf = detail.area;
-        const priceBs = Math.round(surf * parsedPriceM2 * 6.96);
-        const priceUsd = Math.round(surf * parsedPriceM2);
+        const surf = isCurrentlyEditedLot ? (Number(editArea) || detail.area) : detail.area;
+        const frontVal = isCurrentlyEditedLot ? (Number(editFront) || detail.front) : detail.front;
+        const depthVal = isCurrentlyEditedLot ? (Number(editDepth) || detail.depth) : detail.depth;
+        const statusVal = isCurrentlyEditedLot ? editStatus : detail.status;
+
+        const defaultUsd = Math.round(surf * parsedPriceM2);
+        const defaultBs = Math.round(defaultUsd * exchangeRate);
+
+        const priceUsd = isCurrentlyEditedLot
+          ? (isCustomPrice ? Math.round(editPriceUsd) : defaultUsd)
+          : (detail.isCustomPrice && detail.priceUsd !== undefined ? Math.round(detail.priceUsd) : defaultUsd);
+        const priceBs = isCurrentlyEditedLot
+          ? (isCustomPrice ? Math.round(editPriceBs) : defaultBs)
+          : (detail.isCustomPrice && detail.priceBs !== undefined ? Math.round(detail.priceBs) : defaultBs);
 
         const offsetLat = (mzaIdx * 0.00035) + (l * 0.00004);
         const offsetLng = (mzaIdx * 0.0002) + ((l % 5) * 0.00008);
@@ -238,19 +302,47 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
           urbanizationId: urbId,
           urbanizationName: name.trim(),
           surface: surf,
-          front: detail.front,
-          depth: detail.depth,
-          priceBs: detail.priceBs || priceBs,
-          priceUsd: detail.priceUsd || priceUsd,
-          status: detail.status,
+          front: frontVal,
+          depth: depthVal,
+          priceBs,
+          priceUsd,
+          status: statusVal,
           latitude: -17.3935 + offsetLat,
           longitude: -66.1570 + offsetLng,
           cadastralCode: `CAT-${mza.name.replace(/\s+/g, '')}-${String(l).padStart(3, '0')}`,
           zone: 'Residencial',
-          observations: `Lote ${l} del ${mza.name}. Frente ${detail.front}m, Fondo ${detail.depth}m.`,
+          observations: `Lote ${l} del ${mza.name}. Frente ${frontVal}m, Fondo ${depthVal}m.`,
         });
       }
     });
+
+    const availCount = allGeneratedLots.filter(l => l.status === 'Disponible').length;
+    const soldCount = allGeneratedLots.filter(l => l.status === 'Vendido').length;
+    const reservedCount = allGeneratedLots.filter(l => l.status === 'Reservado').length;
+
+    const newUrbanization: Urbanization = {
+      id: urbId,
+      name: name.trim(),
+      city: city.trim() || 'Cochabamba',
+      location: location.trim(),
+      totalLots: allGeneratedLots.length,
+      availableLots: availCount,
+      soldLots: soldCount,
+      reservedLots: reservedCount,
+      pricePerM2: parsedPriceM2,
+      basePricePerM2: parsedPriceM2,
+      latitude: -17.3935,
+      longitude: -66.1570,
+      description: `Urbanización ${name.trim()} ubicada en ${location.trim()}, ${city.trim()}. Con ${manzanosList.length} manzanos y ${allGeneratedLots.length} lotes asignados.`,
+      amenities: ['Agua Potable', 'Energía Eléctrica', 'Vías Pavimentadas', 'Áreas Verdes'],
+      features: ['Agua Potable', 'Energía Eléctrica', 'Vías Pavimentadas', 'Áreas Verdes'],
+      image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
+      ],
+      manzanosCount: manzanosList.length,
+      hasCadastralPlan: false,
+    };
 
     onSaveUrbanization(newUrbanization, allGeneratedLots);
     onClose();
@@ -308,70 +400,70 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
                 INFORMACIÓN BÁSICA
               </h3>
               
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Nombre */}
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0 overflow-hidden bg-slate-50/70 p-2 rounded-xl border border-slate-200/70">
                   <div className="p-2 bg-amber-50 border border-amber-200/80 rounded-xl text-amber-800 shrink-0">
-                    <Tag className="w-5 h-5" />
+                    <Tag className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 overflow-hidden">
                     <div className="text-[11px] font-medium text-slate-500 leading-tight">Nombre:</div>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Ej. Los Ceibos"
-                      className="w-full font-black text-slate-900 text-base leading-tight bg-transparent focus:outline-none focus:bg-amber-50/50 rounded px-1 -mx-1"
+                      className="w-full min-w-0 font-black text-slate-900 text-sm sm:text-base leading-tight bg-transparent focus:outline-none focus:bg-amber-50/50 rounded px-1 truncate"
                     />
                   </div>
                 </div>
 
                 {/* Ubicación */}
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0 overflow-hidden bg-slate-50/70 p-2 rounded-xl border border-slate-200/70">
                   <div className="p-2 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-700 shrink-0">
-                    <MapPin className="w-5 h-5" />
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 overflow-hidden">
                     <div className="text-[11px] font-medium text-slate-500 leading-tight">Ubicación:</div>
                     <input
                       type="text"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                       placeholder="Ej. Sacaba"
-                      className="w-full font-black text-slate-900 text-base leading-tight bg-transparent focus:outline-none focus:bg-rose-50/50 rounded px-1 -mx-1"
+                      className="w-full min-w-0 font-black text-slate-900 text-sm sm:text-base leading-tight bg-transparent focus:outline-none focus:bg-rose-50/50 rounded px-1 truncate"
                     />
                   </div>
                 </div>
 
                 {/* Precio ref./m² */}
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0 overflow-hidden bg-slate-50/70 p-2 rounded-xl border border-slate-200/70">
                   <div className="p-2 bg-amber-100/70 border border-amber-300 rounded-xl text-amber-900 shrink-0">
-                    <Coins className="w-5 h-5" />
+                    <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[11px] font-medium text-slate-500 leading-tight">Precio ref./m²:</div>
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <div className="text-[11px] font-medium text-slate-500 leading-tight">Precio ref./m² ($us.):</div>
                     <input
                       type="number"
                       value={priceM2}
                       onChange={(e) => setPriceM2(Number(e.target.value) || 0)}
-                      className="w-full font-black text-slate-900 text-base leading-tight bg-transparent focus:outline-none focus:bg-amber-50/50 rounded px-1 -mx-1"
+                      className="w-full min-w-0 font-black text-slate-900 text-sm sm:text-base leading-tight bg-transparent focus:outline-none focus:bg-amber-50/50 rounded px-1"
                     />
                   </div>
                 </div>
 
                 {/* Ciudad */}
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0 overflow-hidden bg-slate-50/70 p-2 rounded-xl border border-slate-200/70">
                   <div className="p-2 bg-sky-50 border border-sky-200/80 rounded-xl text-sky-800 shrink-0">
-                    <Building2 className="w-5 h-5" />
+                    <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 overflow-hidden">
                     <div className="text-[11px] font-medium text-slate-500 leading-tight">Ciudad:</div>
                     <input
                       type="text"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       placeholder="Ej. Cochabamba"
-                      className="w-full font-black text-slate-900 text-base leading-tight bg-transparent focus:outline-none focus:bg-sky-50/50 rounded px-1 -mx-1"
+                      className="w-full min-w-0 font-black text-slate-900 text-sm sm:text-base leading-tight bg-transparent focus:outline-none focus:bg-sky-50/50 rounded px-1 truncate"
                     />
                   </div>
                 </div>
@@ -690,20 +782,20 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
                   DETALLES DEL LOTE SELECCIONADO: LOTE {selectedLotNum} ({activeManzano.name})
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 items-end">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 items-end">
                   {/* Área (m²) */}
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">
                       Área (m²)
                     </label>
                     <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1">
-                      <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
+                      <Maximize2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                       <input
                         type="number"
                         step="0.1"
                         value={editArea}
-                        onChange={(e) => setEditArea(parseFloat(e.target.value) || 0)}
-                        className="w-full bg-transparent text-xs font-black text-slate-800 focus:outline-none"
+                        onChange={(e) => handleAreaChange(parseFloat(e.target.value) || 0)}
+                        className="w-full min-w-0 bg-transparent text-xs font-black text-slate-800 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -714,13 +806,17 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
                       Frente (m)
                     </label>
                     <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1">
-                      <ArrowLeftRight className="w-3.5 h-3.5 text-slate-500" />
+                      <ArrowLeftRight className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                       <input
                         type="number"
                         step="0.1"
                         value={editFront}
-                        onChange={(e) => setEditFront(parseFloat(e.target.value) || 0)}
-                        className="w-full bg-transparent text-xs font-black text-slate-800 focus:outline-none"
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || 0;
+                          setEditFront(val);
+                          persistCurrentLotPatch({ front: val });
+                        }}
+                        className="w-full min-w-0 bg-transparent text-xs font-black text-slate-800 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -731,13 +827,53 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
                       Fondo (m)
                     </label>
                     <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1">
-                      <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
+                      <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                       <input
                         type="number"
                         step="0.1"
                         value={editDepth}
-                        onChange={(e) => setEditDepth(parseFloat(e.target.value) || 0)}
-                        className="w-full bg-transparent text-xs font-black text-slate-800 focus:outline-none"
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || 0;
+                          setEditDepth(val);
+                          persistCurrentLotPatch({ depth: val });
+                        }}
+                        className="w-full min-w-0 bg-transparent text-xs font-black text-slate-800 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Precio del Lote ($us.) */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-emerald-800 mb-1">
+                      Precio ($us.)
+                    </label>
+                    <div className="flex items-center gap-1.5 bg-emerald-50/70 border border-emerald-300 rounded-lg px-2 py-1">
+                      <span className="text-[11px] font-black text-emerald-700 shrink-0">$us.</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="10"
+                        value={editPriceUsd}
+                        onChange={(e) => handlePriceUsdChange(parseFloat(e.target.value) || 0)}
+                        className="w-full min-w-0 bg-transparent text-xs font-black text-emerald-950 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Precio del Lote (Bs.) */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Precio (Bs.)
+                    </label>
+                    <div className="flex items-center gap-1.5 bg-amber-50/70 border border-amber-300 rounded-lg px-2 py-1">
+                      <span className="text-[11px] font-black text-amber-800 shrink-0">Bs.</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="50"
+                        value={editPriceBs}
+                        onChange={(e) => handlePriceBsChange(parseFloat(e.target.value) || 0)}
+                        className="w-full min-w-0 bg-transparent text-xs font-black text-slate-900 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -749,7 +885,11 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
                     </label>
                     <select
                       value={editStatus}
-                      onChange={(e) => setEditStatus(e.target.value as LotStatus)}
+                      onChange={(e) => {
+                        const val = e.target.value as LotStatus;
+                        setEditStatus(val);
+                        persistCurrentLotPatch({ status: val });
+                      }}
                       className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs font-black text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4d8f68]"
                     >
                       <option value="Disponible">Disponible</option>
@@ -759,12 +899,12 @@ export const CrearCondominioModal: React.FC<CrearCondominioModalProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                   {saveToast ? (
                     <span className="text-xs font-bold text-emerald-700">{saveToast}</span>
                   ) : (
-                    <span className="text-[11px] text-slate-500">
-                      Precio estimado: ${(editArea * priceM2).toLocaleString()} USD (Bs {(editArea * priceM2 * 6.96).toLocaleString()})
+                    <span className="text-[11px] text-slate-600 font-semibold">
+                      T.C. {exchangeRate.toFixed(2)}: <strong className="text-slate-900">$us. {editPriceUsd.toLocaleString('es-BO')}</strong> &bull; <strong className="text-emerald-800">Bs. {editPriceBs.toLocaleString('es-BO')}</strong>
                     </span>
                   )}
                   <button

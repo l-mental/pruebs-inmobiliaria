@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   X, 
   Printer, 
@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   CreditCard
 } from 'lucide-react';
-import { Client, Sale, Payment, Installment } from '../../types';
+import { Client, Sale, Payment } from '../../types';
 
 interface PlanPagosModalProps {
   isOpen: boolean;
@@ -23,6 +23,7 @@ interface PlanPagosModalProps {
   sale?: Sale | null;
   sales: Sale[];
   payments: Payment[];
+  exchangeRate?: number;
   onRegisterInstallmentPayment?: (saleId: string, installmentNumber: number, amount: number, clientName: string, urbanization: string, lot: string) => void;
 }
 
@@ -33,32 +34,44 @@ export const PlanPagosModal: React.FC<PlanPagosModalProps> = ({
   sale,
   sales,
   payments,
+  exchangeRate = 6.96,
   onRegisterInstallmentPayment,
 }) => {
   const [selectedPlazo, setSelectedPlazo] = useState<number>(12);
+  const [initialPct, setInitialPct] = useState<number>(20);
+  const [selectedSaleIdx, setSelectedSaleIdx] = useState<number>(0);
   const [paidOverrideIds, setPaidOverrideIds] = useState<Record<string, { paidDate: string; receipt: string }>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  if (!isOpen || (!client && !sale)) return null;
 
   // Find all sales matching this client or use the passed sale
   const clientSales = useMemo(() => {
     if (sale) return [sale];
     if (!client) return [];
-    const matched = sales.filter(
+    return sales.filter(
       s =>
         s.clientId === client.id ||
-        s.clientCI.toLowerCase() === client.ci.toLowerCase() ||
+        (client.ci && s.clientCI.toLowerCase() === client.ci.toLowerCase()) ||
         s.clientName.toLowerCase() === client.name.toLowerCase()
     );
-    return matched;
   }, [client, sale, sales]);
 
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedSaleIdx(0);
+      setPaidOverrideIds({});
+      setToastMessage(null);
+    }
+  }, [isOpen, client?.id, sale?.id]);
+
   const activeSale: Sale = useMemo(() => {
-    if (clientSales.length > 0) return clientSales[0];
+    if (clientSales.length > 0) {
+      return clientSales[Math.min(selectedSaleIdx, clientSales.length - 1)] || clientSales[0];
+    }
     // Fallback synthetic sale for clients registered without a sale record yet
     const lotText = client?.purchasedLots?.[0] || 'Villa Bonita - Lote 10';
     const parts = lotText.split(' - ');
+    const fallbackAmount = client?.totalInvested && client.totalInvested > 0 ? client.totalInvested : 45000;
+    const fallbackInitial = Math.round(fallbackAmount * 0.2);
     return {
       id: `CRED-${client?.id || '001'}`,
       date: '05/05/2025',
@@ -71,17 +84,17 @@ export const PlanPagosModal: React.FC<PlanPagosModalProps> = ({
       block: 'Manzano 1',
       surface: '300 m²',
       modality: 'Crédito',
-      amount: 45000,
+      amount: fallbackAmount,
       currency: 'Bs.',
       status: 'En proceso',
       sellerId: 'S-001',
       sellerName: 'Carlos Ruiz',
       observations: 'Plan de pagos bancario de amortización directa.',
       image: '',
-      totalPaid: 15000,
-      pendingBalance: 30000,
+      totalPaid: fallbackInitial,
+      pendingBalance: Math.max(0, fallbackAmount - fallbackInitial),
     };
-  }, [clientSales, client]);
+  }, [clientSales, selectedSaleIdx, client]);
 
   // Client payments history
   const clientPayments = useMemo(() => {
@@ -122,9 +135,9 @@ export const PlanPagosModal: React.FC<PlanPagosModalProps> = ({
       ? Math.max(activeSale.installments.length, selectedPlazo)
       : selectedPlazo;
 
-    const initialDownPayment = Math.round(totalPrice * 0.20); // 20% Cuota Inicial
-    const financedCapital = totalPrice - initialDownPayment;
-    const monthlyPrincipal = Math.round(financedCapital / totalInstallments);
+    const initialDownPayment = Math.round(totalPrice * (initialPct / 100));
+    const financedCapital = Math.max(0, totalPrice - initialDownPayment);
+    const monthlyPrincipal = totalInstallments > 0 ? Math.round(financedCapital / totalInstallments) : financedCapital;
 
     const rows: Array<{
       id: string;
@@ -219,7 +232,7 @@ export const PlanPagosModal: React.FC<PlanPagosModalProps> = ({
     }
 
     return rows;
-  }, [activeSale, selectedPlazo, paidOverrideIds]);
+  }, [activeSale, selectedPlazo, initialPct, paidOverrideIds]);
 
   const summary = useMemo(() => {
     const totalContract = activeSale.amount || 45000;
@@ -233,6 +246,8 @@ export const PlanPagosModal: React.FC<PlanPagosModalProps> = ({
 
     return { totalContract, totalPaid, pendingBalance, paidCount, pendingCount, progressPct };
   }, [bankSchedule, activeSale]);
+
+  if (!isOpen || (!client && !sale)) return null;
 
   const handleMarkInstallmentPaid = (row: typeof bankSchedule[0]) => {
     const today = new Date();
@@ -264,54 +279,87 @@ export const PlanPagosModal: React.FC<PlanPagosModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white w-full max-w-6xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150 print:static print:inset-auto print:bg-white print:p-0 print:block">
+      <div className="bg-white w-full max-w-6xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh] print:max-h-none print:overflow-visible print:shadow-none print:border-0 print:rounded-none">
         
         {/* Top Action Bar (Hidden when printing) */}
-        <div className="bg-gradient-to-r from-[#072a1b] via-[#0d3f2b] to-[#145338] text-white p-4 sm:px-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-amber-400/20 border border-amber-300/40 flex items-center justify-center text-amber-300 shadow-sm">
-              <Landmark className="w-6 h-6" />
+        <div className="bg-gradient-to-r from-[#072a1b] via-[#0d3f2b] to-[#145338] text-white p-3.5 sm:p-4 sm:px-6 flex flex-col lg:flex-row lg:items-center justify-between gap-3 print:hidden">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-400/20 border border-amber-300/40 flex items-center justify-center text-amber-300 shadow-sm shrink-0">
+              <Landmark className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black tracking-tight">
-                  Plan de Pagos y Cronograma Bancario de Cliente
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base sm:text-lg font-black tracking-tight truncate">
+                  Plan de Pagos y Cronograma Bancario
                 </h2>
-                <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 rounded-full text-xs font-black uppercase">
+                <span className="px-2.5 py-0.5 bg-amber-400 text-slate-950 rounded-full text-[11px] font-black uppercase shrink-0">
                   Formato Banco Oficial
                 </span>
               </div>
-              <p className="text-xs text-emerald-200">
-                Estado de cuenta detallado cuota por cuota, amortización de capital, saldo restante e impresión directa
+              <p className="text-xs text-emerald-200 truncate">
+                Estado de cuenta cuota por cuota, amortización de capital, saldo e impresión directa
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {clientSales.length > 1 && (
+              <select
+                value={selectedSaleIdx}
+                onChange={(e) => setSelectedSaleIdx(Number(e.target.value))}
+                className="bg-emerald-950 text-white font-bold px-2.5 py-1.5 rounded-xl border border-emerald-600 text-xs cursor-pointer"
+              >
+                {clientSales.map((cs, idx) => (
+                  <option key={cs.id} value={idx}>
+                    {cs.urbanization} • {cs.lot} ({cs.id})
+                  </option>
+                ))}
+              </select>
+            )}
+
             {activeSale.modality !== 'Contado' && (
-              <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/15 text-xs">
-                <span className="text-emerald-200 font-semibold">Plazo:</span>
-                <select
-                  value={selectedPlazo}
-                  onChange={(e) => setSelectedPlazo(Number(e.target.value))}
-                  className="bg-emerald-950 text-white font-bold px-2 py-1 rounded-lg border border-emerald-600 cursor-pointer"
-                >
-                  <option value={6}>6 Cuotas (Meses)</option>
-                  <option value={12}>12 Cuotas (1 Año)</option>
-                  <option value={18}>18 Cuotas</option>
-                  <option value={24}>24 Cuotas (2 Años)</option>
-                  <option value={36}>36 Cuotas (3 Años)</option>
-                </select>
-              </div>
+              <>
+                <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-xl border border-white/15 text-xs">
+                  <span className="text-emerald-200 font-semibold">Inicial:</span>
+                  <select
+                    value={initialPct}
+                    onChange={(e) => setInitialPct(Number(e.target.value))}
+                    className="bg-emerald-950 text-white font-bold px-2 py-0.5 rounded-lg border border-emerald-600 cursor-pointer"
+                  >
+                    <option value={10}>10%</option>
+                    <option value={15}>15%</option>
+                    <option value={20}>20%</option>
+                    <option value={30}>30%</option>
+                    <option value={40}>40%</option>
+                    <option value={50}>50%</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-xl border border-white/15 text-xs">
+                  <span className="text-emerald-200 font-semibold">Plazo:</span>
+                  <select
+                    value={selectedPlazo}
+                    onChange={(e) => setSelectedPlazo(Number(e.target.value))}
+                    className="bg-emerald-950 text-white font-bold px-2 py-0.5 rounded-lg border border-emerald-600 cursor-pointer"
+                  >
+                    <option value={6}>6 Cuotas</option>
+                    <option value={12}>12 Cuotas (1 Año)</option>
+                    <option value={18}>18 Cuotas</option>
+                    <option value={24}>24 Cuotas (2 Años)</option>
+                    <option value={36}>36 Cuotas (3 Años)</option>
+                    <option value={48}>48 Cuotas (4 Años)</option>
+                    <option value={60}>60 Cuotas (5 Años)</option>
+                  </select>
+                </div>
+              </>
             )}
 
             <button
               onClick={handlePrint}
-              className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
+              className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Imprimir Plan de Pagos</span>
+              <span>Imprimir Plan</span>
             </button>
 
             <button
@@ -332,10 +380,10 @@ export const PlanPagosModal: React.FC<PlanPagosModalProps> = ({
         )}
 
         {/* Printable Bank Payment Plan Document */}
-        <div className="p-4 sm:p-8 overflow-y-auto bg-slate-100 flex-1">
+        <div className="p-3 sm:p-8 overflow-y-auto bg-slate-100 flex-1 print:overflow-visible print:bg-white print:p-0">
           <div
             id="printable-bank-plan"
-            className="max-w-5xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-md border border-slate-300 space-y-6 text-slate-900"
+            className="max-w-5xl mx-auto bg-white p-4 sm:p-10 rounded-2xl shadow-md border border-slate-300 space-y-6 text-slate-900 print:shadow-none print:border-0 print:p-0 print:rounded-none"
           >
             {/* 1. BANK STYLE DOCUMENT HEADER */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b-2 border-slate-900">
@@ -449,7 +497,7 @@ export const PlanPagosModal: React.FC<PlanPagosModalProps> = ({
                   Bs. {summary.totalContract.toLocaleString('es-BO')}
                 </span>
                 <span className="text-[11px] text-slate-500 font-semibold">
-                  Capital Total Contratado
+                  ≈ $us. {Math.round(summary.totalContract / (exchangeRate || 6.96)).toLocaleString('es-BO')} (TC {exchangeRate})
                 </span>
               </div>
 
@@ -473,7 +521,7 @@ export const PlanPagosModal: React.FC<PlanPagosModalProps> = ({
                   Bs. {summary.pendingBalance.toLocaleString('es-BO')}
                 </span>
                 <span className="text-[11px] text-amber-800 font-bold">
-                  {summary.pendingCount} cuotas por pagar
+                  ≈ $us. {Math.round(summary.pendingBalance / (exchangeRate || 6.96)).toLocaleString('es-BO')} ({summary.pendingCount} cuotas)
                 </span>
               </div>
 

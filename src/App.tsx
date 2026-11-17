@@ -47,7 +47,8 @@ export default function App() {
   const [lots, setLots] = useState<Lot[]>(initialLots);
   const [clients, setClients] = useState<Client[]>(initialClients);
   const [sellers] = useState(initialSellers);
-  const [activities] = useState(initialActivities);
+  const [activities, setActivities] = useState(initialActivities);
+  const [exchangeRate, setExchangeRate] = useState<number>(6.96);
 
   // Modals & Inspection States
   const [isNewSaleModalOpen, setIsNewSaleModalOpen] = useState(false);
@@ -58,10 +59,12 @@ export default function App() {
   const [paymentPlanClient, setPaymentPlanClient] = useState<Client | null>(null);
   const [paymentPlanSale, setPaymentPlanSale] = useState<Sale | null>(null);
   const [lotDataForSale, setLotDataForSale] = useState<{
+    lotId?: string;
     clientName?: string;
     clientCI?: string;
     clientPhone?: string;
     lotNumber: string;
+    block?: string;
     urbanizationName: string;
     priceBs: number;
     surface: number;
@@ -69,23 +72,61 @@ export default function App() {
     longitude?: number;
   } | undefined>(undefined);
 
+  const syncUrbanizationsFromLots = (updatedLots: Lot[]) => {
+    setUrbanizations(prevUrbs =>
+      prevUrbs.map(u => {
+        const uLots = updatedLots.filter(l => l.urbanizationId === u.id);
+        if (uLots.length === 0) return u;
+        return {
+          ...u,
+          totalLots: uLots.length,
+          availableLots: uLots.filter(l => l.status === 'Disponible').length,
+          soldLots: uLots.filter(l => l.status === 'Vendido').length,
+          reservedLots: uLots.filter(l => l.status === 'Reservado').length,
+        };
+      })
+    );
+  };
+
   // Handlers
-  const handleSaveSale = (newSale: Sale) => {
+  const handleSaveSale = (newSale: Sale, matchedLotId?: string) => {
     setSales(prev => [newSale, ...prev]);
 
-    // Update lot status if exists
-    setLots(prevLots =>
-      prevLots.map(l =>
-        l.lotNumber === newSale.lot
-          ? { ...l, status: 'Vendido', buyerName: newSale.clientName }
-          : l
-      )
+    // Update ONLY the exact sold lot (matched by ID, or urbanization + block + lotNumber)
+    const targetUrb = urbanizations.find(
+      u => u.name.toLowerCase() === newSale.urbanization.toLowerCase()
     );
+    const normalizeNum = (val: string) =>
+      val.trim().toLowerCase().replace(/^lote\s+/i, '');
+    const targetLotNorm = normalizeNum(newSale.lot);
+    const targetBlockNorm = (newSale.block || '').trim().toLowerCase();
+
+    let updatedOnce = false;
+    const nextLots = lots.map(l => {
+      if (matchedLotId) {
+        return l.id === matchedLotId
+          ? { ...l, status: 'Vendido' as const, buyerName: newSale.clientName }
+          : l;
+      }
+      if (updatedOnce) return l;
+      const sameUrb =
+        l.urbanizationId === targetUrb?.id ||
+        (l.urbanizationName || '').toLowerCase() === newSale.urbanization.toLowerCase();
+      const sameBlock = !targetBlockNorm || l.block.trim().toLowerCase() === targetBlockNorm;
+      const sameNum = normalizeNum(l.lotNumber) === targetLotNorm;
+      if (sameUrb && sameBlock && sameNum) {
+        updatedOnce = true;
+        return { ...l, status: 'Vendido' as const, buyerName: newSale.clientName };
+      }
+      return l;
+    });
+    setLots(nextLots);
+    syncUrbanizationsFromLots(nextLots);
 
     // Auto-sync client record: create or update purchased lots & investment
     setClients(prev => {
       const exists = prev.some(c => c.ci === newSale.clientCI || c.name.toLowerCase() === newSale.clientName.toLowerCase());
-      const lotEntry = `${newSale.urbanization} - ${newSale.lot}`;
+      const lotEntry = `${newSale.urbanization} - ${newSale.lot}${newSale.block ? ` (${newSale.block})` : ''}`;
       if (exists) {
         return prev.map(c => {
           if (c.ci === newSale.clientCI || c.name.toLowerCase() === newSale.clientName.toLowerCase()) {
@@ -139,6 +180,18 @@ export default function App() {
       };
       setPayments(prev => [autoPayment, ...prev]);
     }
+
+    setActivities(prev => [
+      {
+        id: `act-${Date.now()}`,
+        type: 'sale',
+        title: 'Se registró una nueva venta',
+        description: `${newSale.lot} (${newSale.block}) - ${newSale.urbanization}`,
+        time: 'Ahora',
+        iconType: 'sale',
+      },
+      ...prev,
+    ]);
   };
 
   const handleSavePayment = (newPayment: Payment) => {
@@ -160,11 +213,25 @@ export default function App() {
         return s;
       })
     );
+
+    setActivities(prev => [
+      {
+        id: `act-${Date.now()}`,
+        type: 'payment',
+        title: 'Se registró un pago',
+        description: `${newPayment.clientName} - ${newPayment.currency} ${newPayment.amount.toLocaleString('es-BO')}`,
+        time: 'Ahora',
+        iconType: 'payment',
+      },
+      ...prev,
+    ]);
   };
 
   const handleSelectLotForSale = (lot: Lot, urb: Urbanization) => {
     setLotDataForSale({
+      lotId: lot.id,
       lotNumber: lot.lotNumber,
+      block: lot.block,
       urbanizationName: urb.name,
       priceBs: lot.priceBs,
       surface: lot.surface,
@@ -179,26 +246,33 @@ export default function App() {
     if (generatedLots && generatedLots.length > 0) {
       setLots(prev => [...generatedLots, ...prev]);
     }
+    setActivities(prev => [
+      {
+        id: `act-${Date.now()}`,
+        type: 'reservation',
+        title: 'Nueva urbanización registrada',
+        description: `${newUrb.name} (${generatedLots?.length || newUrb.totalLots} terrenos)`,
+        time: 'Ahora',
+        iconType: 'lot',
+      },
+      ...prev,
+    ]);
+  };
+
+  const handleUpdateUrbanization = (updatedUrb: Urbanization) => {
+    setUrbanizations(prev => prev.map(u => u.id === updatedUrb.id ? updatedUrb : u));
   };
 
   const handleAddLot = (newLot: Lot) => {
-    setLots(prev => [newLot, ...prev]);
-    // update urbanization counters
-    setUrbanizations(prev => prev.map(u => {
-      if (u.id === newLot.urbanizationId) {
-        return {
-          ...u,
-          totalLots: u.totalLots + 1,
-          availableLots: newLot.status === 'Disponible' ? u.availableLots + 1 : u.availableLots,
-          soldLots: newLot.status === 'Vendido' ? u.soldLots + 1 : u.soldLots,
-        };
-      }
-      return u;
-    }));
+    const nextLots = [newLot, ...lots];
+    setLots(nextLots);
+    syncUrbanizationsFromLots(nextLots);
   };
 
   const handleUpdateLot = (updatedLot: Lot) => {
-    setLots(prev => prev.map(l => l.id === updatedLot.id ? updatedLot : l));
+    const nextLots = lots.map(l => l.id === updatedLot.id ? updatedLot : l);
+    setLots(nextLots);
+    syncUrbanizationsFromLots(nextLots);
   };
 
   const handleSaveProperty = (newProperty: Property) => {
@@ -213,7 +287,7 @@ export default function App() {
         setClients(prevClients => {
           const exists = prevClients.some(c => c.name.toLowerCase() === cleanName.toLowerCase());
           const lotEntry = `${newProperty.urbanizationName} - ${newProperty.propertyName || newProperty.title}`;
-          const amountInBs = newProperty.currency === '$us.' ? Math.round(newProperty.price * 6.96) : newProperty.price;
+          const amountInBs = newProperty.currency === '$us.' ? Math.round(newProperty.price * exchangeRate) : newProperty.price;
 
           if (exists) {
             return prevClients.map(c => {
@@ -260,7 +334,7 @@ export default function App() {
   const handleOpenSaleForProperty = (prop: Property) => {
     const primaryOwner = prop.ownerNames && prop.ownerNames.length > 0 ? prop.ownerNames[0].trim() : '';
     const lotLabel = `${prop.urbanizationName || 'Urbanización'} - ${prop.propertyName || prop.title}`;
-    const totalBs = prop.currency === '$us.' ? Math.round(prop.price * 6.96) : prop.price;
+    const totalBs = prop.currency === '$us.' ? Math.round(prop.price * exchangeRate) : prop.price;
 
     let targetCI = prop.ownerCI || `${Math.floor(3000000 + Math.random() * 6000000)} CB`;
     let targetPhone = prop.ownerPhone || '71234567';
@@ -351,6 +425,12 @@ export default function App() {
               onNavigate={setCurrentTab}
               properties={properties}
               activities={activities}
+              clients={clients}
+              sales={sales}
+              payments={payments}
+              lots={lots}
+              urbanizations={urbanizations}
+              exchangeRate={exchangeRate}
               onSelectProperty={setSelectedProperty}
               onOpenNewSale={() => {
                 setLotDataForSale(undefined);
@@ -384,6 +464,8 @@ export default function App() {
               sales={sales}
               lots={lots}
               urbanizations={urbanizations}
+              exchangeRate={exchangeRate}
+              onChangeExchangeRate={setExchangeRate}
               onOpenNewPayment={() => setIsNewPaymentModalOpen(true)}
               onOpenContract={(sale) => setContractSale(sale)}
               onOpenPaymentPlan={(sale) => {
@@ -397,8 +479,10 @@ export default function App() {
             <TerrenosView
               lots={lots}
               urbanizations={urbanizations}
+              exchangeRate={exchangeRate}
               onSelectLotForSale={handleSelectLotForSale}
               onAddUrbanization={handleAddUrbanization}
+              onUpdateUrbanization={handleUpdateUrbanization}
               onAddLot={handleAddLot}
               onUpdateLot={handleUpdateLot}
             />
@@ -436,6 +520,8 @@ export default function App() {
         urbanizations={urbanizations}
         clients={clients}
         properties={properties}
+        lots={lots}
+        exchangeRate={exchangeRate}
         onSaveSale={handleSaveSale}
         initialLotData={lotDataForSale}
       />
@@ -470,6 +556,7 @@ export default function App() {
         sale={paymentPlanSale}
         sales={sales}
         payments={payments}
+        exchangeRate={exchangeRate}
         onRegisterInstallmentPayment={(saleId, installmentNumber, amount, clientName, urbanization, lot) => {
           const today = new Date();
           const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;

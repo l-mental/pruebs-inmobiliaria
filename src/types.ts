@@ -153,6 +153,9 @@ export interface Urbanization {
   avenueLotsCount?: number;
   cornerLotsCount?: number;
   manzanosCount?: number;
+  hasCadastralPlan?: boolean;
+  cadastralPlanImage?: string;
+  cadastralPlanName?: string;
 }
 
 export interface Property {

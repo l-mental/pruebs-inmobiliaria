@@ -8,6 +8,7 @@ interface CrearLoteModalProps {
   urbanizations: Urbanization[];
   currentUrbId: string;
   availableBlocks: string[];
+  exchangeRate?: number;
   onSaveLot: (lot: Lot) => void;
 }
 
@@ -17,6 +18,7 @@ export const CrearLoteModal: React.FC<CrearLoteModalProps> = ({
   urbanizations,
   currentUrbId,
   availableBlocks,
+  exchangeRate = 6.96,
   onSaveLot,
 }) => {
   const [selectedUrbId, setSelectedUrbId] = useState(currentUrbId);
@@ -83,12 +85,12 @@ export const CrearLoteModal: React.FC<CrearLoteModalProps> = ({
 
   const handlePriceBsChange = (val: number) => {
     setPriceBs(val);
-    setPriceUsd(Math.round(val / 6.96));
+    setPriceUsd(exchangeRate > 0 ? Math.round(val / exchangeRate) : val);
   };
 
   const handlePriceUsdChange = (val: number) => {
     setPriceUsd(val);
-    setPriceBs(Math.round(val * 6.96));
+    setPriceBs(Math.round(val * exchangeRate));
   };
 
   const handleGetGps = () => {

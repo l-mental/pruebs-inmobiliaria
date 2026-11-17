@@ -37,6 +37,8 @@ interface PagosViewProps {
   sales: Sale[];
   lots?: Lot[];
   urbanizations?: Urbanization[];
+  exchangeRate?: number;
+  onChangeExchangeRate?: (rate: number) => void;
   onOpenNewPayment: () => void;
   onOpenContract: (sale: Sale) => void;
   onOpenPaymentPlan?: (sale: Sale) => void;
@@ -47,6 +49,8 @@ export const PagosView: React.FC<PagosViewProps> = ({
   sales,
   lots = [],
   urbanizations = [],
+  exchangeRate = 6.96,
+  onChangeExchangeRate,
   onOpenNewPayment,
   onOpenContract,
   onOpenPaymentPlan,
@@ -58,7 +62,18 @@ export const PagosView: React.FC<PagosViewProps> = ({
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Todas las formas de pago');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCondoBreakdown, setShowCondoBreakdown] = useState(true);
+  const [rateInput, setRateInput] = useState<string>(exchangeRate.toFixed(2));
   const pageSize = 8;
+
+  const safeRate = exchangeRate > 0 ? exchangeRate : 6.96;
+
+  const handleRateChange = (raw: string) => {
+    setRateInput(raw);
+    const parsed = parseFloat(raw);
+    if (!isNaN(parsed) && parsed > 0 && onChangeExchangeRate) {
+      onChangeExchangeRate(parsed);
+    }
+  };
 
   // Selected client sale detail panel
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
@@ -80,8 +95,8 @@ export const PagosView: React.FC<PagosViewProps> = ({
   }, [relevantLots]);
 
   const totalLotsValueUsd = useMemo(() => {
-    return relevantLots.reduce((acc, l) => acc + (l.priceUsd || 0), 0);
-  }, [relevantLots]);
+    return Math.round(totalLotsValueBs / safeRate);
+  }, [totalLotsValueBs, safeRate]);
 
   const totalLotsCount = relevantLots.length;
 
@@ -108,12 +123,12 @@ export const PagosView: React.FC<PagosViewProps> = ({
   const totalRecaudadoGeneralBs = useMemo(() => {
     const fromPayments = relevantPayments
       .filter(p => p.type === 'cliente' && p.status === 'Pagado')
-      .reduce((sum, p) => sum + (p.currency === 'Bs.' ? p.amount : p.amount * 6.96), 0);
+      .reduce((sum, p) => sum + (p.currency === 'Bs.' ? p.amount : p.amount * safeRate), 0);
     const fromSales = relevantSales.reduce((sum, s) => sum + (s.totalPaid || 0), 0);
     return Math.max(fromPayments, fromSales);
-  }, [relevantPayments, relevantSales]);
+  }, [relevantPayments, relevantSales, safeRate]);
 
-  const totalRecaudadoUsd = Math.round(totalRecaudadoGeneralBs / 6.96);
+  const totalRecaudadoUsd = Math.round(totalRecaudadoGeneralBs / safeRate);
 
   // Porcentaje recaudado sobre el valor total de los terrenos
   const porcentajeRecaudado = useMemo(() => {
@@ -197,23 +212,40 @@ export const PagosView: React.FC<PagosViewProps> = ({
     return sales.find(s => s.id === selectedSaleId) || sales[0];
   }, [selectedSaleId, sales]);
 
-  // Payment Breakdown Summary by Method
+  // Payment Breakdown Summary by Method (Live from payments)
   const methodSummary = useMemo(() => {
-    return [
-      { name: 'Contado', amount: 45000, percent: 53, color: 'bg-emerald-700' },
-      { name: 'Transferencia', amount: 22500, percent: 26, color: 'bg-amber-500' },
-      { name: 'Tarjeta', amount: 10200, percent: 12, color: 'bg-teal-700' },
-      { name: 'Efectivo', amount: 8000, percent: 9, color: 'bg-slate-400' },
+    const clientPaid = payments.filter(p => p.type === 'cliente' && p.status === 'Pagado');
+    const methods: Array<{ name: PaymentMethod; color: string }> = [
+      { name: 'Contado', color: 'bg-emerald-700' },
+      { name: 'Transferencia', color: 'bg-amber-500' },
+      { name: 'Tarjeta', color: 'bg-teal-700' },
+      { name: 'Efectivo', color: 'bg-slate-400' },
     ];
-  }, []);
+    const totals = methods.map(m => {
+      const amount = clientPaid
+        .filter(p => p.paymentMethod === m.name)
+        .reduce((sum, p) => sum + (p.currency === 'Bs.' ? p.amount : p.amount * safeRate), 0);
+      return { ...m, amount };
+    });
+    const grand = totals.reduce((a, b) => a + b.amount, 0) || 1;
+    return totals.map(t => ({
+      ...t,
+      percent: Math.round((t.amount / grand) * 100),
+    }));
+  }, [payments, safeRate]);
 
-  const urbPaymentSummary = [
-    { name: 'Villa Bonita', amount: 28500, img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=150&q=80' },
-    { name: 'Los Pinos', amount: 18700, img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=150&q=80' },
-    { name: 'Valle Verde', amount: 16300, img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=150&q=80' },
-    { name: 'El Mirador', amount: 12200, img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=150&q=80' },
-    { name: 'La Florida', amount: 9000, img: 'https://images.unsplash.com/photo-1511497584788-87676104235f?auto=format&fit=crop&w=150&q=80' },
-  ];
+  const urbPaymentSummary = useMemo(() => {
+    return urbanizations.map(u => {
+      const uRecaudado = sales
+        .filter(s => s.urbanization.toLowerCase().includes(u.name.toLowerCase()))
+        .reduce((sum, s) => sum + (s.totalPaid || 0), 0);
+      return {
+        name: u.name,
+        amount: uRecaudado,
+        img: u.image,
+      };
+    });
+  }, [urbanizations, sales]);
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-[1700px] mx-auto font-sans">
@@ -262,8 +294,8 @@ export const PagosView: React.FC<PagosViewProps> = ({
       {/* SECCIÓN HERO: VALOR TOTAL DE TODOS LOS LOTES Y TOTAL RECAUDADO (REQUERIMIENTO PRINCIPAL) */}
       {/* ========================================================================= */}
       <div className="bg-gradient-to-br from-[#072a1b] via-[#0d3f2b] to-[#124b34] text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-emerald-800/80 space-y-5">
-        {/* Top bar of the Hero Card: Filter & Context */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-emerald-800/60">
+        {/* Top bar of the Hero Card: Filter, Exchange Rate & Context */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 pb-4 border-b border-emerald-800/60">
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-md bg-amber-400/20 text-amber-300 text-[11px] font-extrabold uppercase tracking-wider border border-amber-400/30">
@@ -279,26 +311,58 @@ export const PagosView: React.FC<PagosViewProps> = ({
               Valor Total de Terrenos vs. Recaudación Efectiva
             </h2>
             <p className="text-xs text-emerald-200/80">
-              Métricas consolidadas de la totalidad de lotes en inventario y el dinero recaudado a la fecha.
+              Métricas consolidadas de la totalidad de lotes en inventario y conversión en tiempo real ($us. ↔ Bs.).
             </p>
           </div>
 
-          {/* Quick Urbanization Filter Pill Selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-emerald-200 hidden lg:inline">Urbanización:</span>
-            <select
-              value={selectedUrbanization}
-              onChange={(e) => {
-                setSelectedUrbanization(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-3 py-2 bg-emerald-950/80 border border-emerald-600/50 rounded-xl text-xs font-bold text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-300/40"
-            >
-              <option value="Todas las urbanizaciones">Todas las urbanizaciones (Global)</option>
-              {urbanizations.map((u) => (
-                <option key={u.id} value={u.name}>{u.name}</option>
-              ))}
-            </select>
+          {/* Exchange Rate Editor + Urbanization Filter */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Tipo de Cambio ($us <-> Bs) Control */}
+            <div className="flex items-center gap-2 bg-emerald-950/90 border border-amber-400/40 rounded-xl px-3 py-1.5 shadow-xs">
+              <div className="flex items-center gap-1.5 text-amber-300">
+                <DollarSign className="w-4 h-4 shrink-0" />
+                <span className="text-[11px] font-extrabold uppercase tracking-wide whitespace-nowrap">
+                  Tipo de Cambio (1 $us. = Bs.):
+                </span>
+              </div>
+              <input
+                type="number"
+                step="0.01"
+                min="1"
+                value={rateInput}
+                onChange={(e) => handleRateChange(e.target.value)}
+                onBlur={() => setRateInput(safeRate.toFixed(2))}
+                className="w-20 px-2 py-1 bg-white text-slate-900 rounded-lg text-xs font-black text-center focus:outline-none focus:ring-2 focus:ring-amber-400"
+                title="Modificar tipo de cambio $us. a Bs."
+              />
+              {safeRate !== 6.96 && (
+                <button
+                  type="button"
+                  onClick={() => handleRateChange('6.96')}
+                  className="p-1 text-amber-300 hover:text-white rounded-md hover:bg-white/10 cursor-pointer"
+                  title="Restablecer T.C. oficial (6.96)"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-emerald-200 hidden lg:inline">Urbanización:</span>
+              <select
+                value={selectedUrbanization}
+                onChange={(e) => {
+                  setSelectedUrbanization(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="px-3 py-2 bg-emerald-950/80 border border-emerald-600/50 rounded-xl text-xs font-bold text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-300/40"
+              >
+                <option value="Todas las urbanizaciones">Todas las urbanizaciones (Global)</option>
+                {urbanizations.map((u) => (
+                  <option key={u.id} value={u.name}>{u.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -374,7 +438,7 @@ export const PagosView: React.FC<PagosViewProps> = ({
                   Bs. {saldoPendientePorCobrarBs.toLocaleString('es-BO')}
                 </p>
                 <p className="text-xs font-bold text-sky-200 mt-0.5">
-                  ≈ $us. {Math.round(saldoPendientePorCobrarBs / 6.96).toLocaleString('es-BO')}
+                  ≈ $us. {Math.round(saldoPendientePorCobrarBs / safeRate).toLocaleString('es-BO')}
                 </p>
               </div>
               <div className="w-11 h-11 rounded-2xl bg-sky-400/20 text-sky-300 flex items-center justify-center flex-shrink-0 border border-sky-400/30">
@@ -384,7 +448,7 @@ export const PagosView: React.FC<PagosViewProps> = ({
 
             <div className="pt-3 mt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-sky-100/90">
               <span className="font-semibold">Ventas vigentes a crédito</span>
-              <span className="text-[10px] text-sky-200">En cronograma</span>
+              <span className="text-[10px] text-sky-200">T.C. Bs. {safeRate.toFixed(2)}</span>
             </div>
           </div>
 
@@ -399,7 +463,7 @@ export const PagosView: React.FC<PagosViewProps> = ({
                   {moratoriaLotsCount} lotes
                 </p>
                 <p className="text-xs font-bold text-rose-300/90 mt-0.5">
-                  Bs. {moratoriaValueBs.toLocaleString('es-BO')}
+                  Bs. {moratoriaValueBs.toLocaleString('es-BO')} &bull; ≈ $us. {Math.round(moratoriaValueBs / safeRate).toLocaleString('es-BO')}
                 </p>
               </div>
               <div className="w-11 h-11 rounded-2xl bg-rose-500/20 text-rose-300 flex items-center justify-center flex-shrink-0 border border-rose-400/40">
@@ -658,6 +722,30 @@ export const PagosView: React.FC<PagosViewProps> = ({
                                     const matchedSale = sales.find(s => s.id === p.saleId || s.clientName === p.clientName);
                                     if (matchedSale) {
                                       onOpenPaymentPlan(matchedSale);
+                                    } else {
+                                      const fallbackAmount = p.currency === 'Bs.' ? p.amount : Math.round(p.amount * safeRate);
+                                      onOpenPaymentPlan({
+                                        id: p.saleId || `V-${p.id}`,
+                                        date: p.date,
+                                        clientId: p.id,
+                                        clientName: p.clientName,
+                                        clientCI: p.clientCI || 'S/N',
+                                        clientPhone: '70000000',
+                                        urbanization: p.urbanization,
+                                        lot: p.lot || 'Lote 1',
+                                        block: 'MZA 1',
+                                        surface: '300 m²',
+                                        modality: 'Crédito',
+                                        amount: fallbackAmount,
+                                        currency: 'Bs.',
+                                        status: 'En proceso',
+                                        sellerId: 'U-01',
+                                        sellerName: 'Asesor Comercial',
+                                        observations: p.concept || '',
+                                        image: '',
+                                        totalPaid: p.status === 'Pagado' ? fallbackAmount : 0,
+                                        pendingBalance: p.status === 'Pagado' ? 0 : fallbackAmount,
+                                      });
                                     }
                                   }}
                                   className="px-2.5 py-1.5 rounded-lg bg-[#0d3f2b] hover:bg-[#072a1c] text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer transition-colors"

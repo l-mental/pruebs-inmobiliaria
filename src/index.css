@@ -58,27 +58,57 @@
 
 /* Print Styles for Bank Payment Plan & Contracts */
 @media print {
+  @page {
+    size: letter portrait;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
   body * {
     visibility: hidden;
   }
+
   #printable-bank-plan,
   #printable-bank-plan *,
   #printable-contract,
   #printable-contract * {
     visibility: visible;
   }
+
   #printable-bank-plan,
   #printable-contract {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
-    margin: 0;
-    padding: 0;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: white !important;
     box-shadow: none !important;
     border: none !important;
+    overflow: visible !important;
   }
+
+  #printable-bank-plan table {
+    page-break-inside: auto;
+  }
+
+  #printable-bank-plan tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  #printable-bank-plan thead {
+    display: table-header-group;
+  }
+
   .print\:hidden {
     display: none !important;
   }

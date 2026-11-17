@@ -6,12 +6,18 @@ import {
   ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
-import { Property, ActivityItem, NavTab } from '../../types';
+import { Property, ActivityItem, NavTab, Client, Sale, Payment, Lot, Urbanization } from '../../types';
 import { Logo } from '../Logo';
 
 interface InicioViewProps {
   properties: Property[];
   activities: ActivityItem[];
+  clients?: Client[];
+  sales?: Sale[];
+  payments?: Payment[];
+  lots?: Lot[];
+  urbanizations?: Urbanization[];
+  exchangeRate?: number;
   onNavigate: (tab: NavTab) => void;
   onOpenNewSale: () => void;
   onOpenNewPayment: () => void;
@@ -19,6 +25,13 @@ interface InicioViewProps {
 }
 
 export const InicioView: React.FC<InicioViewProps> = ({
+  activities,
+  clients = [],
+  sales = [],
+  payments = [],
+  lots = [],
+  urbanizations = [],
+  exchangeRate = 6.96,
   onNavigate,
   onOpenNewSale,
   onOpenNewPayment,
@@ -26,59 +39,62 @@ export const InicioView: React.FC<InicioViewProps> = ({
   const [showCommissionsModal, setShowCommissionsModal] = useState(false);
   const [showAllActivitiesModal, setShowAllActivitiesModal] = useState(false);
 
-  // Activities shown in image.png
-  const activitiesList = [
-    {
-      id: 'act-1',
-      title: 'Se registró un nuevo cliente',
-      subtitle: 'María López',
-      time: '09:15 a.m.',
-      type: 'client',
-      color: 'bg-emerald-500 text-white',
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-        </svg>
-      )
-    },
-    {
-      id: 'act-2',
-      title: 'Se registró un pago',
-      subtitle: 'Cliente: Juan Pérez - Bs. 5.000',
-      time: '08:42 a.m.',
-      type: 'payment',
-      color: 'bg-[#0284c7] text-white',
-      icon: (
-        <span className="font-bold text-xs">$</span>
-      )
-    },
-    {
-      id: 'act-3',
-      title: 'Se registró una nueva venta',
-      subtitle: 'Lote M-04 / L-12 - Urbanización 1',
-      time: '08:20 a.m.',
-      type: 'sale',
-      color: 'bg-[#ea580c] text-white',
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-        </svg>
-      )
-    },
-    {
-      id: 'act-4',
-      title: 'Se consultó un terreno',
-      subtitle: 'Lote 235 - Urbanización 2',
-      time: '07:55 a.m.',
-      type: 'lot',
+  const safeRate = exchangeRate > 0 ? exchangeRate : 6.96;
+  const totalPaymentsBs = payments
+    .filter(p => p.type === 'cliente' && p.status === 'Pagado')
+    .reduce((sum, p) => sum + (p.currency === 'Bs.' ? p.amount : Math.round(p.amount * safeRate)), 0);
+
+  const availableLotsCount = lots.filter(l => l.status === 'Disponible').length;
+  const soldLotsCount = lots.filter(l => l.status === 'Vendido').length;
+
+  const getActivityVisual = (type: ActivityItem['type']) => {
+    if (type === 'client') {
+      return {
+        color: 'bg-emerald-500 text-white',
+        icon: (
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+          </svg>
+        ),
+      };
+    }
+    if (type === 'payment') {
+      return {
+        color: 'bg-[#0284c7] text-white',
+        icon: <span className="font-bold text-xs">$</span>,
+      };
+    }
+    if (type === 'sale') {
+      return {
+        color: 'bg-[#ea580c] text-white',
+        icon: (
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+          </svg>
+        ),
+      };
+    }
+    return {
       color: 'bg-[#7c3aed] text-white',
       icon: (
         <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
         </svg>
-      )
-    },
-  ];
+      ),
+    };
+  };
+
+  const activitiesList = activities.map((act) => {
+    const visual = getActivityVisual(act.type);
+    return {
+      id: act.id,
+      title: act.title,
+      subtitle: act.description,
+      time: act.time,
+      color: visual.color,
+      icon: visual.icon,
+    };
+  });
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-[1600px] mx-auto pb-16">
@@ -156,7 +172,7 @@ export const InicioView: React.FC<InicioViewProps> = ({
                   MIS CLIENTES
                 </h3>
                 <p className="text-3xl font-extrabold text-slate-800 mt-0.5">
-                  12
+                  {clients.length}
                 </p>
                 <p className="text-xs text-slate-500 font-medium">
                   Clientes registrados
@@ -184,7 +200,7 @@ export const InicioView: React.FC<InicioViewProps> = ({
                   MIS VENTAS
                 </h3>
                 <p className="text-3xl font-extrabold text-slate-800 mt-0.5">
-                  5
+                  {sales.length}
                 </p>
                 <p className="text-xs text-slate-500 font-medium">
                   Ventas registradas
@@ -212,7 +228,7 @@ export const InicioView: React.FC<InicioViewProps> = ({
                   MIS PAGOS
                 </h3>
                 <p className="text-3xl font-extrabold text-slate-800 mt-0.5">
-                  8
+                  {payments.length}
                 </p>
                 <p className="text-xs text-slate-500 font-medium">
                   Pagos registrados
@@ -510,11 +526,11 @@ export const InicioView: React.FC<InicioViewProps> = ({
                     </svg>
                   </div>
                   <span className="text-sm text-slate-700 font-medium">
-                    Ventas realizadas
+                    Ventas registradas
                   </span>
                 </div>
                 <span className="text-lg font-extrabold text-slate-900">
-                  0
+                  {sales.length}
                 </span>
               </div>
 
@@ -529,24 +545,24 @@ export const InicioView: React.FC<InicioViewProps> = ({
                   </span>
                 </div>
                 <span className="text-lg font-extrabold text-[#0284c7]">
-                  Bs. 0
+                  Bs. {totalPaymentsBs.toLocaleString('es-BO')}
                 </span>
               </div>
 
               {/* Item 3 */}
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#7c3aed] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                  <div className="w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
                     <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-                      <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
                     </svg>
                   </div>
                   <span className="text-sm text-slate-700 font-medium">
-                    Clientes atendidos
+                    Terrenos disponibles
                   </span>
                 </div>
-                <span className="text-lg font-extrabold text-slate-900">
-                  0
+                <span className="text-lg font-extrabold text-emerald-700">
+                  {availableLotsCount}
                 </span>
               </div>
 
@@ -559,11 +575,11 @@ export const InicioView: React.FC<InicioViewProps> = ({
                     </svg>
                   </div>
                   <span className="text-sm text-slate-700 font-medium">
-                    Terrenos mostrados
+                    Terrenos vendidos ({urbanizations.length} urb.)
                   </span>
                 </div>
                 <span className="text-lg font-extrabold text-slate-900">
-                  3
+                  {soldLotsCount}
                 </span>
               </div>
             </div>
@@ -638,7 +654,7 @@ export const InicioView: React.FC<InicioViewProps> = ({
             </p>
             <div className="mt-4 p-3 bg-purple-50 rounded-xl border border-purple-100 text-xs text-purple-900 space-y-1">
               <p className="font-semibold">Estado actual: Asesor Comercial Activo</p>
-              <p>Ventas registradas: 5 | Comisión estimada: 3% sobre valor de contado</p>
+              <p>Ventas registradas: {sales.length} | Comisión estimada: 3% sobre valor de contado</p>
             </div>
             <button
               onClick={() => setShowCommissionsModal(false)}
